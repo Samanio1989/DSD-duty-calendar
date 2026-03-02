@@ -1,0 +1,482 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ปฏิทินวันลาและการปฏิบัติงาน (หน่วยงานราชการ)</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+  <!-- FullCalendar -->
+  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/locales-all.global.min.js"></script>
+
+  <!-- Icons -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+
+  <style>
+    :root{
+      --ink:#0f172a; --muted:#64748b; --line:#e2e8f0;
+      --card:#fff; --shadow:0 14px 40px rgba(15,23,42,.08);
+      --r:18px;
+
+      /* ✅ สีตามประเภท */
+      --c-travel:#2563eb;   /* ไปราชการ */
+      --c-sick:#ef4444;     /* ลาป่วย */
+      --c-personal:#f43f5e; /* ลากิจ */
+      --c-vac:#f59e0b;      /* ลาพักผ่อน */
+      --c-holiday:#94a3b8;  /* วันหยุด */
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:"Kanit",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
+      color:var(--ink);
+      background:
+        radial-gradient(1200px 700px at 10% -10%, rgba(96,165,250,.35), transparent 60%),
+        radial-gradient(1000px 600px at 90% 0%, rgba(22,163,74,.18), transparent 55%),
+        linear-gradient(180deg, #ffffff, #f8fafc 55%, #ffffff);
+    }
+    .wrap{max-width:1280px;margin:0 auto;padding:16px}
+    header{
+      position:sticky;top:0;z-index:10;
+      background:rgba(255,255,255,.78);
+      backdrop-filter: blur(10px);
+      border-bottom:1px solid rgba(226,232,240,.9);
+    }
+    .top{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+    .brand{display:flex;gap:12px;align-items:center}
+    .logo{
+      width:46px;height:46px;border-radius:16px;
+      display:grid;place-items:center;
+      background:linear-gradient(135deg,#2563eb,#60a5fa);
+      color:#fff; box-shadow:0 16px 36px rgba(37,99,235,.28);
+      border:1px solid rgba(255,255,255,.45);
+    }
+    h1{font-size:18px;margin:0}
+    .sub{font-size:13px;color:var(--muted);display:flex;gap:8px;flex-wrap:wrap}
+    .chip{font-size:12px;color:var(--muted);background:rgba(241,245,249,.85);border:1px solid rgba(226,232,240,.9);padding:5px 10px;border-radius:999px;display:inline-flex;gap:6px;align-items:center}
+    .grid{display:grid;grid-template-columns:1.6fr .9fr;gap:14px}
+    @media(max-width:980px){.grid{grid-template-columns:1fr}}
+    .card{background:rgba(255,255,255,.92);border:1px solid rgba(226,232,240,.95);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden}
+    .card-h{padding:14px;border-bottom:1px solid rgba(226,232,240,.9);display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+    .card-h .t{font-weight:900;display:flex;gap:10px;align-items:center}
+    .card-b{padding:14px}
+    .btn{
+      border:1px solid rgba(226,232,240,.95);
+      background:rgba(255,255,255,.9);
+      padding:10px 12px;border-radius:14px;
+      cursor:pointer;font-weight:800;
+      display:inline-flex;gap:8px;align-items:center;
+    }
+    .btn.primary{background:linear-gradient(135deg,#2563eb,#3b82f6);color:#fff;border-color:rgba(37,99,235,.35)}
+    .btn.good{background:linear-gradient(135deg,#16a34a,#22c55e);color:#fff;border-color:rgba(22,163,74,.35)}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    @media(max-width:640px){.row{grid-template-columns:1fr}}
+    select,input{
+      width:100%;padding:11px 12px;border-radius:14px;
+      border:1px solid rgba(226,232,240,.95);
+      font-family:inherit;background:rgba(255,255,255,.95);outline:none;
+    }
+    .hint{font-size:13px;color:var(--muted);line-height:1.6}
+    .warn{border:1px solid rgba(245,158,11,.35);background:rgba(255,251,235,.9);color:#92400e;padding:10px 12px;border-radius:14px;display:none;gap:10px}
+    .ok{border:1px solid rgba(22,163,74,.32);background:rgba(240,253,244,.9);color:#065f46;padding:10px 12px;border-radius:14px;display:none;gap:10px}
+    .legend{display:grid;gap:8px;margin-top:10px}
+    .pill{display:flex;gap:10px;align-items:center;padding:10px 12px;border:1px dashed rgba(226,232,240,.95);border-radius:16px;background:rgba(255,255,255,.9);font-size:13px}
+    .dot{width:10px;height:10px;border-radius:999px}
+    #calendar{min-height:820px}
+    .fc .fc-toolbar-title{font-size:18px;font-weight:900}
+  </style>
+</head>
+
+<body>
+<header>
+  <div class="wrap">
+    <div class="top">
+      <div class="brand">
+        <div class="logo"><i class="fa-solid fa-calendar-check"></i></div>
+        <div>
+          <h1>ปฏิทินวันลาและการปฏิบัติงาน (หน่วยงานราชการ)</h1>
+          <div class="sub">
+            <span class="chip"><i class="fa-solid fa-clock"></i> ปีงบประมาณ 1 ต.ค. 2568 - 30 ก.ย. 2569</span>
+            <span class="chip"><i class="fa-solid fa-circle-info"></i> นับ “วันทำการ” (จ.-ศ. ไม่รวมวันหยุด)</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn" id="btnReload"><i class="fa-solid fa-rotate"></i> โหลดข้อมูล</button>
+        <button class="btn primary" id="btnRefresh"><i class="fa-solid fa-arrows-rotate"></i> รีเฟรชปฏิทิน</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+    <div class="grid">
+      <div class="card">
+        <div class="card-h">
+          <div class="t"><i class="fa-solid fa-calendar"></i> ปฏิทิน (แยกสีตามประเภท)</div>
+          <div class="hint"><i class="fa-solid fa-bolt"></i> บันทึก/แก้ไข/ลบ แล้วอัปเดตทันที</div>
+        </div>
+        <div class="card-b">
+          <div id="calendar"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-h">
+          <div class="t"><i class="fa-solid fa-plus"></i> เพิ่มเหตุการณ์</div>
+        </div>
+        <div class="card-b">
+          <div class="warn" id="msgWarn"><i class="fa-solid fa-triangle-exclamation" style="margin-top:2px"></i><div id="warnText"></div></div>
+          <div class="ok" id="msgOk"><i class="fa-solid fa-circle-check" style="margin-top:2px"></i><div id="okText"></div></div>
+
+          <div class="row">
+            <div>
+              <div class="hint"><b><i class="fa-solid fa-user"></i> บุคลากร</b></div>
+              <select id="staffSel"></select>
+            </div>
+            <div>
+              <div class="hint"><b><i class="fa-solid fa-tags"></i> ประเภท</b></div>
+              <select id="typeSel">
+                <option value="TRAVEL">ไปราชการ</option>
+                <option value="SICK">ลาป่วย</option>
+                <option value="PERSONAL">ลากิจ</option>
+                <option value="VACATION">ลาพักผ่อน</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="row" style="margin-top:10px">
+            <div>
+              <div class="hint"><b><i class="fa-regular fa-calendar"></i> วันที่เริ่ม</b></div>
+              <input id="startDate" type="date">
+            </div>
+            <div>
+              <div class="hint"><b><i class="fa-regular fa-calendar-check"></i> วันที่สิ้นสุด</b> (รวมวันสิ้นสุด)</div>
+              <input id="endDate" type="date">
+            </div>
+          </div>
+
+          <div class="row" style="margin-top:10px">
+            <div>
+              <div class="hint"><b><i class="fa-regular fa-clock"></i> รูปแบบเวลา</b></div>
+              <select id="allDaySel">
+                <option value="true" selected>ทั้งวัน (All-day) — แนะนำ</option>
+                <option value="false">มีเวลา (09:00-16:30)</option>
+              </select>
+            </div>
+            <div>
+              <div class="hint"><b><i class="fa-solid fa-pen"></i> รายละเอียดเพิ่ม</b> (ไม่บังคับ)</div>
+              <input id="extra" placeholder="เช่น อบรม/ประชุม/ธุระ...">
+            </div>
+          </div>
+
+          <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn good" id="btnSave"><i class="fa-solid fa-floppy-disk"></i> บันทึก</button>
+          </div>
+
+          <div class="legend">
+            <div class="pill"><span class="dot" style="background:var(--c-travel)"></span><b>ไปราชการ</b></div>
+            <div class="pill"><span class="dot" style="background:var(--c-sick)"></span><b>ลาป่วย</b></div>
+            <div class="pill"><span class="dot" style="background:var(--c-personal)"></span><b>ลากิจ</b></div>
+            <div class="pill"><span class="dot" style="background:var(--c-vac)"></span><b>ลาพักผ่อน</b></div>
+            <div class="pill"><span class="dot" style="background:var(--c-holiday)"></span><b>วันหยุดนักขัตฤกษ์</b> (พื้นหลัง)</div>
+          </div>
+
+          <div class="hint" style="margin-top:10px">
+            * คลิกที่เหตุการณ์เพื่อแก้ไข/ลบ (ยกเว้นวันหยุด)
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</main>
+
+<!-- EDIT MODAL -->
+<div id="modal" style="position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(15,23,42,.45);z-index:9999;padding:14px">
+  <div style="width:min(560px,100%);background:rgba(255,255,255,.98);border:1px solid rgba(226,232,240,.95);border-radius:18px;box-shadow:0 18px 50px rgba(15,23,42,.18);overflow:hidden">
+    <div style="padding:14px;border-bottom:1px solid rgba(226,232,240,.9);display:flex;justify-content:space-between;align-items:center;gap:10px">
+      <div style="font-weight:900;display:flex;align-items:center;gap:10px">
+        <i class="fa-solid fa-pen-to-square"></i> แก้ไข/ลบเหตุการณ์
+      </div>
+      <button class="btn" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+
+    <div style="padding:14px">
+      <div class="hint" id="mTitle" style="font-weight:800;color:#0f172a"></div>
+      <div class="hint" id="mId" style="font-size:12px;color:#64748b;margin-top:4px"></div>
+
+      <div class="row" style="margin-top:12px">
+        <div>
+          <div class="hint"><b>บุคลากร</b></div>
+          <select id="mStaff"></select>
+        </div>
+        <div>
+          <div class="hint"><b>ประเภท</b></div>
+          <select id="mType">
+            <option value="TRAVEL">ไปราชการ</option>
+            <option value="SICK">ลาป่วย</option>
+            <option value="PERSONAL">ลากิจ</option>
+            <option value="VACATION">ลาพักผ่อน</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:10px">
+        <div>
+          <div class="hint"><b>วันที่เริ่ม</b></div>
+          <input id="mStart" type="date">
+        </div>
+        <div>
+          <div class="hint"><b>วันที่สิ้นสุด</b> (รวมวันสิ้นสุด)</div>
+          <input id="mEnd" type="date">
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:10px">
+        <div>
+          <div class="hint"><b>รูปแบบเวลา</b></div>
+          <select id="mAllDay">
+            <option value="true">ทั้งวัน (All-day)</option>
+            <option value="false">มีเวลา (09:00-16:30)</option>
+          </select>
+        </div>
+        <div>
+          <div class="hint"><b>รายละเอียดเพิ่ม</b></div>
+          <input id="mExtra" placeholder="เช่น อบรม/ประชุม/ธุระ...">
+        </div>
+      </div>
+
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">
+        <button class="btn good" onclick="saveEdit()"><i class="fa-solid fa-floppy-disk"></i> บันทึกการแก้ไข</button>
+        <button class="btn" style="border-color:rgba(239,68,68,.35);color:#b91c1c" onclick="deleteEdit()">
+          <i class="fa-solid fa-trash"></i> ลบเหตุการณ์
+        </button>
+      </div>
+
+      <div class="hint" style="margin-top:10px">
+        * วันหยุดนักขัตฤกษ์ (พื้นหลัง) ไม่สามารถแก้ไข/ลบ
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ✅ ใส่ URL Web App ของ Apps Script ที่ Deploy แล้ว
+  const API_BASE = "https://script.google.com/macros/s/AKfycbxaSE_nedSXF89df3zlPUITQJaWUdofdRmkYajPxWU6o_I--s12eHHStShBhSZImoyquQ/exec";
+
+  // JSONP helper (แก้ CORS สำหรับ GitHub Pages)
+  function jsonp(params){
+    return new Promise((resolve, reject)=>{
+      const cb = "cb_" + Math.random().toString(36).slice(2);
+      const url = new URL(API_BASE);
+      Object.entries({ page:"api", callback: cb, ...params }).forEach(([k,v])=>url.searchParams.set(k, v));
+
+      const s = document.createElement("script");
+      window[cb] = (data)=>{ delete window[cb]; s.remove(); resolve(data); };
+      s.onerror = ()=>{ delete window[cb]; s.remove(); reject(new Error("JSONP error")); };
+      s.src = url.toString();
+      document.body.appendChild(s);
+    });
+  }
+
+  const $ = (id)=>document.getElementById(id);
+  function showWarn(msg){ $("warnText").textContent = msg; $("msgWarn").style.display="flex"; $("msgOk").style.display="none"; }
+  function showOk(msg){ $("okText").textContent = msg; $("msgOk").style.display="flex"; $("msgWarn").style.display="none"; }
+  function clearMsg(){ $("msgWarn").style.display="none"; $("msgOk").style.display="none"; }
+
+  function getCSS(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+
+  // สีตามประเภท (ฝั่ง UI)
+  function colorByType(type){
+    if(type === "HOLIDAY") return { display:"background", backgroundColor:"rgba(148,163,184,.18)" };
+    if(type === "ไปราชการ") return { backgroundColor:getCSS("--c-travel"), borderColor:getCSS("--c-travel"), textColor:"#fff" };
+    if(type === "ลาป่วย") return { backgroundColor:getCSS("--c-sick"), borderColor:getCSS("--c-sick"), textColor:"#fff" };
+    if(type === "ลากิจ") return { backgroundColor:getCSS("--c-personal"), borderColor:getCSS("--c-personal"), textColor:"#fff" };
+    if(type === "ลาพักผ่อน") return { backgroundColor:getCSS("--c-vac"), borderColor:getCSS("--c-vac"), textColor:"#111827" };
+    return {};
+  }
+
+  let calendar;
+  let CURRENT_EVENT = null;
+
+  async function loadBootstrap(){
+    clearMsg();
+    const res = await jsonp({ act:"bootstrap" });
+    if(!res.ok) { showWarn(res.message || "โหลดข้อมูลไม่สำเร็จ"); return; }
+
+    const staff = res.data.staff || [];
+    $("staffSel").innerHTML = staff.map(s=>`<option value="${s.StaffID}">${s.FullName}</option>`).join("");
+
+    // default today
+    const d = new Date();
+    const pad = (n)=>String(n).padStart(2,'0');
+    const ymd = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+    $("startDate").value = ymd;
+    $("endDate").value = ymd;
+
+    showOk("โหลดข้อมูลเรียบร้อย");
+  }
+
+  function buildCalendar(){
+    const el = document.getElementById("calendar");
+    calendar = new FullCalendar.Calendar(el, {
+      locale: "th",
+      initialView: "dayGridMonth",
+      height: "auto",
+      nowIndicator: true,
+      dayMaxEvents: true,
+
+      headerToolbar: {
+        left: "today prev,next",
+        center: "title",
+        right: "dayGridMonth,timeGridWeek,timeGridDay"
+      },
+
+      events: async (info, success, failure)=>{
+        try{
+          const res = await jsonp({
+            act:"events",
+            start: info.startStr,
+            end: info.endStr,
+            includeHolidays: "true"
+          });
+          if(!res.ok) throw new Error(res.message || "โหลดเหตุการณ์ไม่สำเร็จ");
+
+          const events = (res.data||[]).map(ev=>{
+            const type = (ev.extendedProps && ev.extendedProps.type) ? ev.extendedProps.type : "";
+            const color = colorByType(type === "HOLIDAY" ? "HOLIDAY" : type);
+            return { ...ev, ...color };
+          });
+
+          success(events);
+        }catch(err){
+          failure(err);
+          showWarn(err.message || "โหลดเหตุการณ์ไม่สำเร็จ");
+        }
+      },
+
+      eventClick: (info) => {
+        if (info.event.extendedProps && info.event.extendedProps.holiday) return;
+        openModal(info.event);
+      },
+
+      eventDidMount: (arg)=>{
+        if(arg.event.extendedProps && arg.event.extendedProps.holiday) return;
+        arg.el.title = arg.event.title;
+      }
+    });
+
+    calendar.render();
+  }
+
+  async function saveEvent(){
+    clearMsg();
+
+    const StaffID = $("staffSel").value;
+    const Type = $("typeSel").value;
+    const StartDate = $("startDate").value;
+    const EndDate = $("endDate").value;
+    const AllDay = $("allDaySel").value;
+    const TitleExtra = $("extra").value.trim();
+
+    if(!StaffID) return showWarn("กรุณาเลือกบุคลากร");
+    if(!StartDate || !EndDate) return showWarn("กรุณาระบุวันที่เริ่ม/สิ้นสุด");
+
+    const res = await jsonp({ act:"createEvent", StaffID, Type, StartDate, EndDate, AllDay, TitleExtra });
+    if(!res.ok) return showWarn(res.message || "บันทึกไม่สำเร็จ");
+
+    showOk("บันทึกแล้ว — อัปเดตปฏิทิน");
+    $("extra").value = "";
+    calendar.refetchEvents();
+  }
+
+  function openModal(ev) {
+    CURRENT_EVENT = ev;
+    $("mStaff").innerHTML = $("staffSel").innerHTML;
+
+    $("mTitle").textContent = ev.title;
+    $("mId").textContent = "EventID: " + ev.id;
+
+    const staffId = (ev.extendedProps && ev.extendedProps.staffId) ? ev.extendedProps.staffId : "";
+    const typeTh  = (ev.extendedProps && ev.extendedProps.type) ? ev.extendedProps.type : "";
+
+    $("mStaff").value = staffId || $("staffSel").value;
+
+    const mapType = { "ไปราชการ":"TRAVEL","ลาป่วย":"SICK","ลากิจ":"PERSONAL","ลาพักผ่อน":"VACATION" };
+    $("mType").value = mapType[typeTh] || "VACATION";
+
+    const startStr = (ev.startStr || "").slice(0,10);
+    let endStr = "";
+    if (ev.endStr) {
+      const d = new Date(ev.endStr);
+      d.setDate(d.getDate() - 1); // end exclusive -> end inclusive
+      endStr = d.toISOString().slice(0,10);
+    } else {
+      endStr = startStr;
+    }
+
+    $("mStart").value = startStr;
+    $("mEnd").value = endStr;
+    $("mAllDay").value = ev.allDay ? "true" : "false";
+    $("mExtra").value = "";
+
+    $("modal").style.display = "flex";
+  }
+
+  function closeModal() {
+    $("modal").style.display = "none";
+    CURRENT_EVENT = null;
+  }
+
+  async function saveEdit() {
+    if (!CURRENT_EVENT) return;
+
+    const EventID = CURRENT_EVENT.id;
+    const StaffID = $("mStaff").value;
+    const Type = $("mType").value;
+    const StartDate = $("mStart").value;
+    const EndDate = $("mEnd").value;
+    const AllDay = $("mAllDay").value;
+    const TitleExtra = $("mExtra").value.trim();
+
+    if(!StartDate || !EndDate) return showWarn("กรุณาระบุวันที่เริ่ม/สิ้นสุด");
+
+    const res = await jsonp({ act:"updateEvent", EventID, StaffID, Type, StartDate, EndDate, AllDay, TitleExtra });
+    if(!res.ok) return showWarn(res.message || "บันทึกการแก้ไขไม่สำเร็จ");
+
+    showOk("บันทึกการแก้ไขแล้ว");
+    closeModal();
+    calendar.refetchEvents();
+  }
+
+  async function deleteEdit() {
+    if (!CURRENT_EVENT) return;
+    if (!confirm("ยืนยันลบเหตุการณ์นี้?")) return;
+
+    const EventID = CURRENT_EVENT.id;
+    const res = await jsonp({ act:"deleteEvent", EventID });
+    if(!res.ok) return showWarn(res.message || "ลบไม่สำเร็จ");
+
+    showOk("ลบเหตุการณ์แล้ว");
+    closeModal();
+    calendar.refetchEvents();
+  }
+
+  $("btnReload").onclick = loadBootstrap;
+  $("btnRefresh").onclick = ()=>calendar.refetchEvents();
+  $("btnSave").onclick = saveEvent;
+
+  (async ()=>{
+    buildCalendar();
+    await loadBootstrap();
+  })();
+</script>
+</body>
+</html>
