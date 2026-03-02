@@ -91,6 +91,72 @@
   </style>
 </head>
 
+  /* =========================
+   สีประจำวัน (พื้นหลังคอลัมน์)
+   ========================= */
+
+/* ความเข้มของพื้นหลัง (ปรับได้) */
+:root{
+  --dow-alpha: 0.10;       /* พื้นหลังอ่อนๆ */
+  --dow-border-alpha: 0.18;/* เส้นกรอบอ่อนๆ */
+}
+
+/* ทำ overlay ให้แต่ละช่องวัน */
+.fc .fc-daygrid-day-frame{
+  position: relative;
+  overflow: hidden;
+}
+.fc .fc-daygrid-day-frame::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background: transparent;
+  pointer-events:none;
+  z-index:0;               /* อยู่ใต้ event */
+}
+
+/* ให้เนื้อหาในช่อง (เลขวัน/รายการ) อยู่เหนือ overlay */
+.fc .fc-daygrid-day-top,
+.fc .fc-daygrid-day-events,
+.fc .fc-daygrid-more-link{
+  position: relative;
+  z-index: 1;
+}
+
+/* สีประจำวันแบบอ่อนๆ ทั้งคอลัมน์ */
+.fc .fc-day-sun .fc-daygrid-day-frame::before{ background: rgba(239, 68, 68, var(--dow-alpha)); }   /* อาทิตย์ แดง */
+.fc .fc-day-mon .fc-daygrid-day-frame::before{ background: rgba(245,158,11, var(--dow-alpha)); }   /* จันทร์ เหลือง/ส้ม */
+.fc .fc-day-tue .fc-daygrid-day-frame::before{ background: rgba(244, 63, 94, var(--dow-alpha)); }  /* อังคาร ชมพู */
+.fc .fc-day-wed .fc-daygrid-day-frame::before{ background: rgba(34,197,94,  var(--dow-alpha)); }   /* พุธ เขียว */
+.fc .fc-day-thu .fc-daygrid-day-frame::before{ background: rgba(249,115,22, var(--dow-alpha)); }   /* พฤหัส ส้ม */
+.fc .fc-day-fri .fc-daygrid-day-frame::before{ background: rgba(59,130,246, var(--dow-alpha)); }   /* ศุกร์ ฟ้า */
+.fc .fc-day-sat .fc-daygrid-day-frame::before{ background: rgba(168, 85,247, var(--dow-alpha)); }  /* เสาร์ ม่วง */
+
+/* เพิ่มเส้นขอบหัวตารางให้ดูชัดขึ้นนิดหนึ่ง */
+.fc .fc-col-header-cell{
+  border-bottom: 1px solid rgba(148,163,184,var(--dow-border-alpha));
+}
+
+/* แต่งหัววัน (อาทิตย์-เสาร์) ให้มีสีตามวัน (อ่านง่าย) */
+.fc .fc-col-header-cell.fc-day-sun{ color:#b91c1c; font-weight:900; }
+.fc .fc-col-header-cell.fc-day-mon{ color:#92400e; font-weight:900; }
+.fc .fc-col-header-cell.fc-day-tue{ color:#be123c; font-weight:900; }
+.fc .fc-col-header-cell.fc-day-wed{ color:#166534; font-weight:900; }
+.fc .fc-col-header-cell.fc-day-thu{ color:#9a3412; font-weight:900; }
+.fc .fc-col-header-cell.fc-day-fri{ color:#1d4ed8; font-weight:900; }
+.fc .fc-col-header-cell.fc-day-sat{ color:#6d28d9; font-weight:900; }
+
+/* ให้วัน “วันนี้” เด่นขึ้น แต่ไม่ชนกับสีประจำวัน */
+.fc .fc-day-today .fc-daygrid-day-frame::before{
+  outline: 2px solid rgba(37,99,235,.22);
+  outline-offset: -2px;
+}
+
+/* เพื่อให้ background event (วันหยุด) ยังเห็นชัด */
+.fc .fc-bg-event{
+  opacity: .30;
+}
+
 <body>
 <header>
   <div class="wrap">
