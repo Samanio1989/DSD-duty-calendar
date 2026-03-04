@@ -120,7 +120,7 @@
       background-image: var(--month-bg, none);
       background-size: cover;
       background-position: center;
-      opacity: .12; /* ความชัดของภาพพื้นหลัง */
+      opacity: .12;
       filter: saturate(1.1) contrast(1.05);
       pointer-events:none;
       z-index:0;
@@ -198,6 +198,31 @@
       padding:4px 8px;border-radius:999px;font-size:12px;font-weight:900;color:#334155
     }
     .right{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}
+
+    /* overlay loading */
+    #loading{
+      position:fixed; inset:0;
+      display:none; align-items:center; justify-content:center;
+      background:rgba(15,23,42,.35);
+      z-index:10000;
+      padding:16px;
+    }
+    .loadCard{
+      background:rgba(255,255,255,.96);
+      border:1px solid rgba(226,232,240,.95);
+      border-radius:18px;
+      box-shadow:0 18px 60px rgba(15,23,42,.18);
+      padding:14px 16px;
+      display:flex; gap:12px; align-items:center;
+      min-width:min(360px,100%);
+    }
+    .spin{
+      width:24px; height:24px; border-radius:50%;
+      border:3px solid rgba(37,99,235,.18);
+      border-top-color:#2563eb;
+      animation: sp 0.9s linear infinite;
+    }
+    @keyframes sp { to { transform: rotate(360deg); } }
   </style>
 </head>
 
@@ -274,11 +299,11 @@
             <div class="row" style="margin-top:10px">
               <div>
                 <div class="hint"><b><i class="fa-regular fa-calendar"></i> วันที่เริ่ม</b></div>
-                <input id="startDate" type="date">
+                <input id="startDate" type="date" placeholder="dd/mm/yyyy หรือ yyyy-mm-dd">
               </div>
               <div>
                 <div class="hint"><b><i class="fa-regular fa-calendar-check"></i> วันที่สิ้นสุด</b> (รวมวันสิ้นสุด)</div>
-                <input id="endDate" type="date">
+                <input id="endDate" type="date" placeholder="dd/mm/yyyy หรือ yyyy-mm-dd">
               </div>
             </div>
 
@@ -488,6 +513,17 @@
   </div>
 </main>
 
+<!-- Loading overlay -->
+<div id="loading">
+  <div class="loadCard">
+    <div class="spin"></div>
+    <div>
+      <div style="font-weight:900">กำลังประมวลผล…</div>
+      <div class="hint" id="loadingText">โปรดรอสักครู่</div>
+    </div>
+  </div>
+</div>
+
 <!-- EDIT MODAL -->
 <div id="modal" style="position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(15,23,42,.45);z-index:9999;padding:14px">
   <div style="width:min(560px,100%);background:rgba(255,255,255,.98);border:1px solid rgba(226,232,240,.95);border-radius:18px;box-shadow:0 18px 50px rgba(15,23,42,.18);overflow:hidden">
@@ -556,46 +592,57 @@
 </div>
 
 <script>
-  // ✅ WebApp URL (ใส่ให้แล้วตามที่คุณสั่ง)
+  // ✅ WebApp URL
   const API_BASE = "https://script.google.com/macros/s/AKfycbxaSE_nedSXF89df3zlPUITQJaWUdofdRmkYajPxWU6o_I--s12eHHStShBhSZImoyquQ/exec".trim();
 
-  // ✅ ภาพพื้นหลัง “วันสำคัญประจำเดือน” (เปลี่ยนตามเดือน)
-  // แนะนำ: ใส่รูปไว้ใน repo: /assets/bg/01.png ... /12.png
+  // ✅ ภาพพื้นหลังรายเดือน (ใส่รูปไว้ใน repo: /assets/bg/01.png ... 12.png)
   const MONTH_BG = {
-    1:  "url('assets/bg/01.png')", // ม.ค.
-    2:  "url('assets/bg/02.png')", // ก.พ.
-    3:  "url('assets/bg/03.png')", // มี.ค.
-    4:  "url('assets/bg/04.png')", // เม.ย.
-    5:  "url('assets/bg/05.png')", // พ.ค.
-    6:  "url('assets/bg/06.png')", // มิ.ย.
-    7:  "url('assets/bg/07.png')", // ก.ค.
-    8:  "url('assets/bg/08.png')", // ส.ค.
-    9:  "url('assets/bg/09.png')", // ก.ย.
-    10: "url('assets/bg/10.png')", // ต.ค.
-    11: "url('assets/bg/11.png')", // พ.ย.
-    12: "url('assets/bg/12.png')"  // ธ.ค.
+    1:  "url('assets/bg/01.png')",
+    2:  "url('assets/bg/02.png')",
+    3:  "url('assets/bg/03.png')",
+    4:  "url('assets/bg/04.png')",
+    5:  "url('assets/bg/05.png')",
+    6:  "url('assets/bg/06.png')",
+    7:  "url('assets/bg/07.png')",
+    8:  "url('assets/bg/08.png')",
+    9:  "url('assets/bg/09.png')",
+    10: "url('assets/bg/10.png')",
+    11: "url('assets/bg/11.png')",
+    12: "url('assets/bg/12.png')"
   };
 
-  // กัน URL ผิด
   if (!/^https:\/\/script\.google\.com\/macros\/s\/.+\/exec$/.test(API_BASE)) {
     alert("ตั้งค่า API_BASE ไม่ถูกต้อง\nต้องเป็นลิงก์ Web App ที่ลงท้ายด้วย /exec");
+  }
+
+  const $ = (id)=>document.getElementById(id);
+
+  function setLoading(on, text){
+    const el = $("loading");
+    const t = $("loadingText");
+    if(text) t.textContent = text;
+    el.style.display = on ? "flex" : "none";
   }
 
   // JSONP helper (แก้ CORS สำหรับ GitHub Pages)
   function jsonp(params){
     return new Promise((resolve, reject)=>{
       const cb = "cb_" + Math.random().toString(36).slice(2);
-      const url = new URL(API_BASE);
+      let url;
+      try{
+        url = new URL(API_BASE);
+      }catch(e){
+        return reject(new Error("Invalid API URL"));
+      }
       Object.entries({ page:"api", callback: cb, ...params }).forEach(([k,v])=>url.searchParams.set(k, v));
       const s = document.createElement("script");
       window[cb] = (data)=>{ delete window[cb]; s.remove(); resolve(data); };
-      s.onerror = ()=>{ delete window[cb]; s.remove(); reject(new Error("JSONP error")); };
+      s.onerror = ()=>{ delete window[cb]; s.remove(); reject(new Error("JSONP error / ไม่สามารถติดต่อ API ได้")); };
       s.src = url.toString();
       document.body.appendChild(s);
     });
   }
 
-  const $ = (id)=>document.getElementById(id);
   function showWarn(msg){ $("warnText").textContent = msg; $("msgWarn").style.display="flex"; $("msgOk").style.display="none"; }
   function showOk(msg){ $("okText").textContent = msg; $("msgOk").style.display="flex"; $("msgWarn").style.display="none"; }
   function clearMsg(){ $("msgWarn").style.display="none"; $("msgOk").style.display="none"; }
@@ -609,7 +656,7 @@
   }
   function jsq(s){ return String(s ?? '').replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
 
-  // สีตามประเภท (ใช้จาก typeKey ที่ส่งมาจาก Code.gs)
+  // สีตามประเภท
   function colorByTypeKey(typeKey, isHoliday){
     if(isHoliday) return { display:"background", backgroundColor:"rgba(148,163,184,.18)" };
     if(typeKey === "TRAVEL") return { backgroundColor:"var(--c-travel)", borderColor:"var(--c-travel)", textColor:"#fff" };
@@ -647,8 +694,6 @@
 
   let calendar;
   let CURRENT_EVENT = null;
-
-  // cached
   let STAFF = [];
   let POLICY = {};
 
@@ -660,24 +705,30 @@
 
   async function loadBootstrap(){
     clearMsg(); aClear();
-    const res = await jsonp({ act:"bootstrap" });
-    if(!res.ok) { showWarn(res.message || "โหลดข้อมูลไม่สำเร็จ"); return; }
+    setLoading(true, "กำลังโหลดข้อมูลเริ่มต้น…");
+    try{
+      const res = await jsonp({ act:"bootstrap" });
+      if(!res.ok) { showWarn(res.message || "โหลดข้อมูลไม่สำเร็จ"); return; }
 
-    STAFF = res.data.staff || [];
-    POLICY = res.data.policy || {};
+      STAFF = res.data.staff || [];
+      POLICY = res.data.policy || {};
 
-    $("staffSel").innerHTML = STAFF.map(s=>`<option value="${s.StaffID}">${s.FullName}</option>`).join("");
-    $("pStaffSel").innerHTML = STAFF.map(s=>`<option value="${s.StaffID}">${s.FullName}</option>`).join("");
+      $("staffSel").innerHTML = STAFF.map(s=>`<option value="${s.StaffID}">${s.FullName}</option>`).join("");
+      $("pStaffSel").innerHTML = STAFF.map(s=>`<option value="${s.StaffID}">${s.FullName}</option>`).join("");
 
-    // default today
-    const d = new Date();
-    const pad = (n)=>String(n).padStart(2,'0');
-    const ymd = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
-    $("startDate").value = ymd;
-    $("endDate").value = ymd;
+      const d = new Date();
+      const pad = (n)=>String(n).padStart(2,'0');
+      const ymd = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+      $("startDate").value = ymd;
+      $("endDate").value = ymd;
 
-    bindStatsStaffDropdown();
-    showOk("โหลดข้อมูลเรียบร้อย");
+      bindStatsStaffDropdown();
+      showOk("โหลดข้อมูลเรียบร้อย");
+    }catch(err){
+      showWarn(err?.message || "โหลดข้อมูลไม่สำเร็จ");
+    }finally{
+      setLoading(false);
+    }
   }
 
   function buildCalendar(){
@@ -696,7 +747,6 @@
       },
 
       datesSet: (info)=>{
-        // ✅ เปลี่ยนภาพพื้นหลังตาม “เดือนที่กำลังแสดง”
         setMonthBackground(info.start);
       },
 
@@ -749,12 +799,19 @@
     if(!StaffID) return showWarn("กรุณาเลือกบุคลากร");
     if(!StartDate || !EndDate) return showWarn("กรุณาเลือกวันที่ให้ครบถ้วน");
 
-    const res = await jsonp({ act:"createEvent", StaffID, Type, StartDate, EndDate, AllDay, TitleExtra });
-    if(!res.ok) return showWarn(res.message || "บันทึกไม่สำเร็จ");
+    setLoading(true, "กำลังบันทึกเหตุการณ์…");
+    try{
+      const res = await jsonp({ act:"createEvent", StaffID, Type, StartDate, EndDate, AllDay, TitleExtra });
+      if(!res.ok) return showWarn(res.message || "บันทึกไม่สำเร็จ");
 
-    showOk("บันทึกแล้ว — อัปเดตปฏิทิน");
-    $("extra").value = "";
-    calendar.refetchEvents();
+      showOk("บันทึกแล้ว — อัปเดตปฏิทิน");
+      $("extra").value = "";
+      calendar.refetchEvents();
+    }catch(err){
+      showWarn(err?.message || "บันทึกไม่สำเร็จ (JSONP error)");
+    }finally{
+      setLoading(false);
+    }
   }
 
   // ===== Edit modal =====
@@ -798,23 +855,37 @@
     const AllDay = $("mAllDay").value;
     const TitleExtra = $("mExtra").value.trim();
 
-    const res = await jsonp({ act:"updateEvent", EventID, StaffID, Type, StartDate, EndDate, AllDay, TitleExtra });
-    if(!res.ok) return showWarn(res.message || "บันทึกการแก้ไขไม่สำเร็จ");
-
-    showOk("บันทึกการแก้ไขแล้ว");
-    closeModal();
-    calendar.refetchEvents();
+    setLoading(true, "กำลังบันทึกการแก้ไข…");
+    try{
+      const res = await jsonp({ act:"updateEvent", EventID, StaffID, Type, StartDate, EndDate, AllDay, TitleExtra });
+      if(!res.ok) return showWarn(res.message || "บันทึกการแก้ไขไม่สำเร็จ");
+      showOk("บันทึกการแก้ไขแล้ว");
+      closeModal();
+      calendar.refetchEvents();
+    }catch(err){
+      showWarn(err?.message || "บันทึกการแก้ไขไม่สำเร็จ (JSONP error)");
+    }finally{
+      setLoading(false);
+    }
   }
 
   async function deleteEdit() {
     if (!CURRENT_EVENT) return;
     if (!confirm("ยืนยันลบเหตุการณ์นี้?")) return;
-    const EventID = CURRENT_EVENT.id;
-    const res = await jsonp({ act:"deleteEvent", EventID });
-    if(!res.ok) return showWarn(res.message || "ลบไม่สำเร็จ");
-    showOk("ลบเหตุการณ์แล้ว");
-    closeModal();
-    calendar.refetchEvents();
+
+    setLoading(true, "กำลังลบเหตุการณ์…");
+    try{
+      const EventID = CURRENT_EVENT.id;
+      const res = await jsonp({ act:"deleteEvent", EventID });
+      if(!res.ok) return showWarn(res.message || "ลบไม่สำเร็จ");
+      showOk("ลบเหตุการณ์แล้ว");
+      closeModal();
+      calendar.refetchEvents();
+    }catch(err){
+      showWarn(err?.message || "ลบไม่สำเร็จ (JSONP error)");
+    }finally{
+      setLoading(false);
+    }
   }
 
   // ===== Stats =====
@@ -865,54 +936,81 @@
     `;
   }
 
+  // ✅ FIX: ใส่ try/catch เพื่อไม่ให้ค้าง และแสดง error ชัดเจน
   async function calcStats(period){
     const staffId = $("stStaff").value;
     const {start,end} = periodRange(period);
     $("stMsg").textContent = "กำลังคำนวณ…";
-    const res = await jsonp({ act:"stats", StaffID: staffId, start, end });
-    if(!res.ok){ $("stMsg").textContent=""; return showWarn(res.message || "คำนวณสถิติไม่สำเร็จ"); }
-    $("stMsg").textContent = "คำนวณแล้ว";
-    renderStats(res.data);
+    setLoading(true, "กำลังคำนวณสถิติ…");
+    try{
+      const res = await jsonp({ act:"stats", StaffID: staffId, start, end });
+      if(!res || !res.ok){
+        $("stMsg").textContent = "";
+        showWarn((res && res.message) ? res.message : "คำนวณสถิติไม่สำเร็จ (API ไม่ตอบกลับ)");
+        return;
+      }
+      $("stMsg").textContent = "คำนวณแล้ว";
+      renderStats(res.data);
+    }catch(err){
+      $("stMsg").textContent = "";
+      showWarn(err?.message || "คำนวณสถิติไม่สำเร็จ (JSONP error)");
+    }finally{
+      setLoading(false);
+    }
   }
 
+  // ✅ FIX: ใส่ try/catch + ตรวจ bad response
   async function calcFYAll(){
     const staffId = $("stStaff").value;
     $("stMsg").textContent = "กำลังคำนวณ FY + รอบ 1/2…";
-    const fy = periodRange("FY"), p1 = periodRange("P1"), p2 = periodRange("P2");
-    const [rFY, rP1, rP2] = await Promise.all([
-      jsonp({ act:"stats", StaffID: staffId, start: fy.start, end: fy.end }),
-      jsonp({ act:"stats", StaffID: staffId, start: p1.start, end: p1.end }),
-      jsonp({ act:"stats", StaffID: staffId, start: p2.start, end: p2.end }),
-    ]);
-    if(!rFY.ok) return showWarn(rFY.message || "คำนวณ FY ไม่สำเร็จ");
-    if(!rP1.ok) return showWarn(rP1.message || "คำนวณรอบ 1 ไม่สำเร็จ");
-    if(!rP2.ok) return showWarn(rP2.message || "คำนวณรอบ 2 ไม่สำเร็จ");
+    setLoading(true, "กำลังคำนวณ FY + รอบ 1/2…");
+    try{
+      const fy = periodRange("FY"), p1 = periodRange("P1"), p2 = periodRange("P2");
 
-    $("stMsg").textContent = "คำนวณแล้ว (FY / รอบ 1 / รอบ 2)";
-    const rows = [
-      ["ปีงบประมาณ", rFY.data],
-      ["รอบ 1", rP1.data],
-      ["รอบ 2", rP2.data],
-    ].map(([label,d])=>{
-      const c = d.counts || {};
-      return `<tr>
-        <td><b>${label}</b><div class="smallmuted">${d.range.start} ถึง ${d.range.end}</div></td>
-        <td>${c.TRAVEL ?? 0}</td>
-        <td>${c.SICK ?? 0}</td>
-        <td>${c.PERSONAL ?? 0}</td>
-        <td>${c.VACATION ?? 0}</td>
-      </tr>`;
-    }).join("");
+      const [rFY, rP1, rP2] = await Promise.all([
+        jsonp({ act:"stats", StaffID: staffId, start: fy.start, end: fy.end }),
+        jsonp({ act:"stats", StaffID: staffId, start: p1.start, end: p1.end }),
+        jsonp({ act:"stats", StaffID: staffId, start: p2.start, end: p2.end }),
+      ]);
 
-    $("stResult").innerHTML = `
-      <div class="hint"><b>${escapeHtml((rFY.data.staff && rFY.data.staff.FullName) || "")}</b></div>
-      <div style="margin-top:10px;overflow:auto;border:1px solid rgba(226,232,240,.9);border-radius:16px">
-        <table>
-          <thead><tr><th>ช่วง</th><th>ไปราชการ</th><th>ลาป่วย</th><th>ลากิจ</th><th>ลาพักผ่อน</th></tr></thead>
-          <tbody>${rows}</tbody>
-        </table>
-      </div>
-    `;
+      const bad = [rFY, rP1, rP2].find(x=>!x || !x.ok);
+      if(bad){
+        $("stMsg").textContent = "";
+        showWarn(bad?.message || "คำนวณไม่สำเร็จ (มีช่วงหนึ่ง API ตอบ error)");
+        return;
+      }
+
+      $("stMsg").textContent = "คำนวณแล้ว (FY / รอบ 1 / รอบ 2)";
+      const rows = [
+        ["ปีงบประมาณ", rFY.data],
+        ["รอบ 1", rP1.data],
+        ["รอบ 2", rP2.data],
+      ].map(([label,d])=>{
+        const c = d.counts || {};
+        return `<tr>
+          <td><b>${label}</b><div class="smallmuted">${d.range.start} ถึง ${d.range.end}</div></td>
+          <td>${c.TRAVEL ?? 0}</td>
+          <td>${c.SICK ?? 0}</td>
+          <td>${c.PERSONAL ?? 0}</td>
+          <td>${c.VACATION ?? 0}</td>
+        </tr>`;
+      }).join("");
+
+      $("stResult").innerHTML = `
+        <div class="hint"><b>${escapeHtml((rFY.data.staff && rFY.data.staff.FullName) || "")}</b></div>
+        <div style="margin-top:10px;overflow:auto;border:1px solid rgba(226,232,240,.9);border-radius:16px">
+          <table>
+            <thead><tr><th>ช่วง</th><th>ไปราชการ</th><th>ลาป่วย</th><th>ลากิจ</th><th>ลาพักผ่อน</th></tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+      `;
+    }catch(err){
+      $("stMsg").textContent = "";
+      showWarn(err?.message || "คำนวณไม่สำเร็จ (JSONP error)");
+    }finally{
+      setLoading(false);
+    }
   }
 
   // ===== Admin =====
@@ -977,28 +1075,42 @@
     const IsActive = $("aIsActive").value;
 
     if(!StaffID || !FullName) return aWarn("กรุณากรอก StaffID และ ชื่อ-สกุล");
-    const res = await jsonp({ act:"upsertStaff", StaffID, FullName, Position, Department, CalendarTag, IsActive });
-    if(!res.ok) return aWarn(res.message || "บันทึกบุคลากรไม่สำเร็จ");
-    aOk("บันทึกแล้ว");
-    await reloadStaffAndPolicy(true);
-    clearStaffForm();
+    setLoading(true, "กำลังบันทึกบุคลากร…");
+    try{
+      const res = await jsonp({ act:"upsertStaff", StaffID, FullName, Position, Department, CalendarTag, IsActive });
+      if(!res.ok) return aWarn(res.message || "บันทึกบุคลากรไม่สำเร็จ");
+      aOk("บันทึกแล้ว");
+      await reloadStaffAndPolicy(true);
+      clearStaffForm();
+    }catch(err){
+      aWarn(err?.message || "บันทึกบุคลากรไม่สำเร็จ (JSONP error)");
+    }finally{
+      setLoading(false);
+    }
   }
 
   async function setActive(staffId, isActive){
     const s = STAFF.find(x=>x.StaffID===staffId);
     if(!s) return;
-    const res = await jsonp({
-      act:"upsertStaff",
-      StaffID: s.StaffID,
-      FullName: s.FullName||"",
-      Position: s.Position||"",
-      Department: s.Department||"",
-      CalendarTag: s.CalendarTag||"",
-      IsActive: isActive
-    });
-    if(!res.ok) return aWarn(res.message || "อัปเดตสถานะไม่สำเร็จ");
-    aOk("อัปเดตสถานะแล้ว");
-    await reloadStaffAndPolicy(true);
+    setLoading(true, "กำลังอัปเดตสถานะ…");
+    try{
+      const res = await jsonp({
+        act:"upsertStaff",
+        StaffID: s.StaffID,
+        FullName: s.FullName||"",
+        Position: s.Position||"",
+        Department: s.Department||"",
+        CalendarTag: s.CalendarTag||"",
+        IsActive: isActive
+      });
+      if(!res.ok) return aWarn(res.message || "อัปเดตสถานะไม่สำเร็จ");
+      aOk("อัปเดตสถานะแล้ว");
+      await reloadStaffAndPolicy(true);
+    }catch(err){
+      aWarn(err?.message || "อัปเดตสถานะไม่สำเร็จ (JSONP error)");
+    }finally{
+      setLoading(false);
+    }
   }
 
   function loadPolicyToForm(){
@@ -1018,11 +1130,18 @@
     const GrantedThisFY = $("pGranted").value.trim();
     const AccumulateCap = $("pCap").value.trim();
 
-    const res = await jsonp({ act:"upsertPolicy", StaffID, CarryPrev, GrantedThisFY, AccumulateCap });
-    if(!res.ok) return aWarn(res.message || "บันทึกไม่สำเร็จ");
-    aOk("บันทึกวันลาพักผ่อนแล้ว");
-    await reloadStaffAndPolicy(true);
-    loadPolicyToForm();
+    setLoading(true, "กำลังบันทึกวันลาพักผ่อน…");
+    try{
+      const res = await jsonp({ act:"upsertPolicy", StaffID, CarryPrev, GrantedThisFY, AccumulateCap });
+      if(!res.ok) return aWarn(res.message || "บันทึกไม่สำเร็จ");
+      aOk("บันทึกวันลาพักผ่อนแล้ว");
+      await reloadStaffAndPolicy(true);
+      loadPolicyToForm();
+    }catch(err){
+      aWarn(err?.message || "บันทึกไม่สำเร็จ (JSONP error)");
+    }finally{
+      setLoading(false);
+    }
   }
 
   async function reloadStaffAndPolicy(refreshCalendar){
@@ -1040,7 +1159,7 @@
 
       if(refreshCalendar && calendar) calendar.refetchEvents();
     }catch(err){
-      aWarn(err.message || "โหลดข้อมูลไม่สำเร็จ");
+      aWarn(err?.message || "โหลดข้อมูลไม่สำเร็จ");
     }
   }
 
