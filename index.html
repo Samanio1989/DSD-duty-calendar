@@ -316,11 +316,11 @@
             <div class="row" style="margin-top:10px">
               <div>
                 <div class="hint"><b><i class="fa-regular fa-calendar"></i> วันที่เริ่ม</b></div>
-                <input id="startDate" type="date" placeholder="dd/mm/yyyy หรือ yyyy-mm-dd">
+                <input id="startDate" type="date">
               </div>
               <div>
                 <div class="hint"><b><i class="fa-regular fa-calendar-check"></i> วันที่สิ้นสุด</b> (รวมวันสิ้นสุด)</div>
-                <input id="endDate" type="date" placeholder="dd/mm/yyyy หรือ yyyy-mm-dd">
+                <input id="endDate" type="date">
               </div>
             </div>
 
@@ -455,7 +455,7 @@
               </div>
               <div>
                 <div class="hint">ชื่อ-สกุล</div>
-                <input id="aFullName" placeholder="เช่น กิตติรัตน์ บุญล้ำ">
+                <input id="aFullName" placeholder="เช่น กาญจนา จินตนา">
               </div>
             </div>
 
@@ -877,27 +877,31 @@
     $("mTitle").textContent = ev.title;
     $("mId").textContent = "EventID: " + ev.id;
 
-    const staffId = (ev.extendedProps && ev.extendedProps.staffId) ? ev.extendedProps.staffId : "";
-    const typeKey = (ev.extendedProps && ev.extendedProps.typeKey) ? ev.extendedProps.typeKey : "";
-    const extra = (ev.extendedProps && ev.extendedProps.extra) ? ev.extendedProps.extra : "";
+    const xp = ev.extendedProps || {};
+    const staffId = xp.staffId || "";
+    const typeKey = xp.typeKey || "";
+    const extra = xp.extra || "";
 
     $("mStaff").value = staffId || $("staffSel").value;
     $("mType").value = typeKey || "VACATION";
 
-    const startStr = (ev.startStr || "").slice(0,10);
-    let endStr = "";
-    if (ev.endStr) {
-      const d = new Date(ev.endStr);
-      d.setDate(d.getDate() - 1);
-      endStr = d.toISOString().slice(0,10);
-    } else {
-      endStr = startStr;
+    let startStr = xp.startDate || (ev.startStr || "").slice(0,10);
+    let endStr = xp.endDate || "";
+
+    if (!endStr) {
+      if (ev.endStr) {
+        const d = new Date(ev.endStr);
+        d.setDate(d.getDate() - 1);
+        endStr = d.toISOString().slice(0,10);
+      } else {
+        endStr = startStr;
+      }
     }
 
     $("mStart").value = startStr;
     $("mEnd").value = endStr;
     $("mAllDay").value = ev.allDay ? "true" : "false";
-    $("mExtra").value = extra || "";
+    $("mExtra").value = extra;
 
     $("modal").style.display = "flex";
   }
