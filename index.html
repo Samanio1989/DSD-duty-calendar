@@ -8,7 +8,6 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;700&display=swap" rel="stylesheet">
 
-  <!-- FullCalendar -->
   <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.css" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/locales-all.global.min.js"></script>
@@ -59,10 +58,22 @@
     }
     h1{font-size:18px;margin:0}
     .sub{font-size:13px;color:var(--muted);display:flex;gap:8px;flex-wrap:wrap}
-    .chip{font-size:12px;color:var(--muted);background:rgba(241,245,249,.85);border:1px solid rgba(226,232,240,.9);padding:5px 10px;border-radius:999px;display:inline-flex;gap:6px;align-items:center}
+    .chip{
+      font-size:12px;color:var(--muted);
+      background:rgba(241,245,249,.85);
+      border:1px solid rgba(226,232,240,.9);
+      padding:5px 10px;border-radius:999px;
+      display:inline-flex;gap:6px;align-items:center
+    }
 
     .tabs{display:flex;gap:8px;flex-wrap:wrap}
-    .tab{border:1px solid rgba(226,232,240,.95);background:rgba(241,245,249,.65);padding:10px 12px;border-radius:14px;font-weight:900;cursor:pointer;display:flex;gap:8px;align-items:center}
+    .tab{
+      border:1px solid rgba(226,232,240,.95);
+      background:rgba(241,245,249,.65);
+      padding:10px 12px;border-radius:14px;
+      font-weight:900;cursor:pointer;
+      display:flex;gap:8px;align-items:center
+    }
     .tab.active{background:linear-gradient(135deg,#2563eb,#3b82f6);color:#fff;border-color:rgba(37,99,235,.35)}
 
     .btn{
@@ -95,7 +106,11 @@
       border:1px solid rgba(226,232,240,.95);
       font-family:inherit;background:rgba(255,255,255,.95);outline:none;
     }
+
     .hint{font-size:13px;color:var(--muted);line-height:1.6}
+    .smallmuted{font-size:12px;color:#64748b;margin-top:4px;line-height:1.5}
+    .print-note{font-size:12px;color:#64748b}
+
     .warnbox{border:1px solid rgba(245,158,11,.35);background:rgba(255,251,235,.9);color:#92400e;padding:10px 12px;border-radius:14px;display:none;gap:10px}
     .okbox{border:1px solid rgba(22,163,74,.32);background:rgba(240,253,244,.9);color:#065f46;padding:10px 12px;border-radius:14px;display:none;gap:10px}
 
@@ -179,7 +194,6 @@
     .statCard{border:1px solid rgba(226,232,240,.95);background:rgba(255,255,255,.9);border-radius:16px;padding:12px}
     .statCard b{display:flex;gap:8px;align-items:center}
     .big{font-size:26px;font-weight:900;margin-top:4px}
-    .smallmuted{font-size:12px;color:#64748b;margin-top:4px;line-height:1.5}
 
     table{width:100%;border-collapse:separate;border-spacing:0}
     th,td{padding:10px 10px;border-bottom:1px solid rgba(226,232,240,.9);text-align:left;font-size:14px}
@@ -216,6 +230,17 @@
       animation: sp 0.9s linear infinite;
     }
     @keyframes sp { to { transform: rotate(360deg); } }
+
+    @media print {
+      body{ background:#fff !important; }
+      header, .tabs, .btn, #loading, #modal{ display:none !important; }
+      .wrap{ max-width:100% !important; padding:0 !important; }
+      .card{
+        box-shadow:none !important;
+        border:1px solid #dbe3ee !important;
+        background:#fff !important;
+      }
+    }
   </style>
 </head>
 
@@ -250,7 +275,6 @@
 <main>
   <div class="wrap">
 
-    <!-- SECTION: CAL -->
     <div class="section active" id="secCal">
       <div class="grid">
         <div class="card">
@@ -334,7 +358,6 @@
       </div>
     </div>
 
-    <!-- SECTION: STATS -->
     <div class="section" id="secStats">
       <div class="grid" style="grid-template-columns:1.05fr .95fr">
         <div class="card">
@@ -358,9 +381,15 @@
               <button class="btn primary" id="btnCalcStatsAll">
                 <i class="fa-solid fa-calculator"></i> คำนวณสถิติทั้งหมด
               </button>
+              <button class="btn" id="btnPrintStats">
+                <i class="fa-solid fa-print"></i> พิมพ์ผลสรุป
+              </button>
             </div>
 
             <div id="stMsg" class="hint" style="margin-top:10px;color:#64748b"></div>
+            <div class="print-note" style="margin-top:8px">
+              พิมพ์ได้หลังจากคำนวณสถิติแล้ว ระบบจะเปิดหน้ารายงานสำหรับพิมพ์หรือบันทึกเป็น PDF
+            </div>
           </div>
         </div>
 
@@ -375,7 +404,6 @@
       </div>
     </div>
 
-    <!-- SECTION: ADMIN -->
     <div class="section" id="secAdmin">
       <div class="grid" style="grid-template-columns:1.2fr .8fr">
         <div class="card">
@@ -603,6 +631,12 @@
 
   const $ = (id)=>document.getElementById(id);
 
+  let calendar;
+  let CURRENT_EVENT = null;
+  let STAFF = [];
+  let POLICY = {};
+  let LAST_STATS_DATA = null;
+
   function setLoading(on, text){
     const el = $("loading");
     const t = $("loadingText");
@@ -628,18 +662,61 @@
     });
   }
 
-  function showWarn(msg){ $("warnText").textContent = msg; $("msgWarn").style.display="flex"; $("msgOk").style.display="none"; }
-  function showOk(msg){ $("okText").textContent = msg; $("msgOk").style.display="flex"; $("msgWarn").style.display="none"; }
-  function clearMsg(){ $("msgWarn").style.display="none"; $("msgOk").style.display="none"; }
+  function showWarn(msg){
+    $("warnText").textContent = msg;
+    $("msgWarn").style.display="flex";
+    $("msgOk").style.display="none";
+  }
 
-  function aWarn(msg){ $("adminWarnText").textContent = msg; $("adminWarn").style.display="flex"; $("adminOk").style.display="none"; }
-  function aOk(msg){ $("adminOkText").textContent = msg; $("adminOk").style.display="flex"; $("adminWarn").style.display="none"; }
-  function aClear(){ $("adminWarn").style.display="none"; $("adminOk").style.display="none"; }
+  function showOk(msg){
+    $("okText").textContent = msg;
+    $("msgOk").style.display="flex";
+    $("msgWarn").style.display="none";
+  }
+
+  function clearMsg(){
+    $("msgWarn").style.display="none";
+    $("msgOk").style.display="none";
+  }
+
+  function aWarn(msg){
+    $("adminWarnText").textContent = msg;
+    $("adminWarn").style.display="flex";
+    $("adminOk").style.display="none";
+  }
+
+  function aOk(msg){
+    $("adminOkText").textContent = msg;
+    $("adminOk").style.display="flex";
+    $("adminWarn").style.display="none";
+  }
+
+  function aClear(){
+    $("adminWarn").style.display="none";
+    $("adminOk").style.display="none";
+  }
 
   function escapeHtml(s){
     return String(s ?? '').replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' }[m]));
   }
-  function jsq(s){ return String(s ?? '').replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
+
+  function jsq(s){
+    return String(s ?? '').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+  }
+
+  function formatThaiDate(ymd){
+    if(!ymd) return "-";
+    const dt = new Date(ymd + "T00:00:00");
+    if (isNaN(dt.getTime())) return ymd;
+    const months = [
+      "มกราคม","กุมภาพันธ์","มีนาคม","เมษายน","พฤษภาคม","มิถุนายน",
+      "กรกฎาคม","สิงหาคม","กันยายน","ตุลาคม","พฤศจิกายน","ธันวาคม"
+    ];
+    const d = dt.getDate();
+    const m = months[dt.getMonth()];
+    const y = dt.getFullYear() + 543;
+    return `${d} ${m} ${y}`;
+  }
 
   function colorByTypeKey(typeKey, isHoliday){
     if(isHoliday) return { display:"background", backgroundColor:"rgba(148,163,184,.18)" };
@@ -675,11 +752,6 @@
     }
   }
 
-  let calendar;
-  let CURRENT_EVENT = null;
-  let STAFF = [];
-  let POLICY = {};
-
   function setMonthBackground(dateObj){
     const m = (dateObj.getMonth() + 1);
     const url = MONTH_BG[m] || "none";
@@ -687,11 +759,15 @@
   }
 
   async function loadBootstrap(){
-    clearMsg(); aClear();
+    clearMsg();
+    aClear();
     setLoading(true, "กำลังโหลดข้อมูลเริ่มต้น…");
     try{
       const res = await jsonp({ act:"bootstrap" });
-      if(!res.ok) { showWarn(res.message || "โหลดข้อมูลไม่สำเร็จ"); return; }
+      if(!res.ok) {
+        showWarn(res.message || "โหลดข้อมูลไม่สำเร็จ");
+        return;
+      }
 
       STAFF = res.data.staff || [];
       POLICY = res.data.policy || {};
@@ -739,6 +815,7 @@
             end: info.endStr,
             includeHolidays: "true"
           });
+
           if(!res.ok) throw new Error(res.message || "โหลดเหตุการณ์ไม่สำเร็จ");
 
           const events = (res.data||[]).map(ev=>{
@@ -832,6 +909,7 @@
 
   async function saveEdit() {
     if (!CURRENT_EVENT) return;
+
     const EventID = CURRENT_EVENT.id;
     const StaffID = $("mStaff").value;
     const Type = $("mType").value;
@@ -880,6 +958,8 @@
   }
 
   function renderStatsAllPeriods(data){
+    LAST_STATS_DATA = data;
+
     const staffName = (data.staff && data.staff.FullName) ? data.staff.FullName : "";
     const vac = data.vacation || {};
     const periods = data.periods || {};
@@ -990,12 +1070,231 @@
     }
   }
 
+  function printStatsReport(){
+    if(!LAST_STATS_DATA){
+      showWarn("กรุณาคำนวณสถิติก่อนพิมพ์");
+      return;
+    }
+
+    const data = LAST_STATS_DATA;
+    const staff = data.staff || {};
+    const vac = data.vacation || {};
+    const periods = data.periods || {};
+
+    function block(label, d){
+      const c = (d && d.counts) ? d.counts : {};
+      const r = (d && d.range) ? d.range : {};
+      return `
+        <div class="period">
+          <div class="period-title">${label}</div>
+          <div class="period-sub">
+            ช่วงวันที่ ${formatThaiDate(r.start)} - ${formatThaiDate(r.end)}
+            | วันทำการ ${r.workdays ?? 0} วัน
+          </div>
+          <table class="tbl">
+            <thead>
+              <tr>
+                <th>ประเภท</th>
+                <th>จำนวนวัน</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>ไปราชการ</td><td>${c.TRAVEL ?? 0}</td></tr>
+              <tr><td>ลาป่วย</td><td>${c.SICK ?? 0}</td></tr>
+              <tr><td>ลากิจ</td><td>${c.PERSONAL ?? 0}</td></tr>
+              <tr><td>ลาพักผ่อน</td><td>${c.VACATION ?? 0}</td></tr>
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    const html = `
+      <!doctype html>
+      <html lang="th">
+      <head>
+        <meta charset="utf-8">
+        <title>พิมพ์ผลสรุปสถิติ</title>
+        <style>
+          @page { size: A4; margin: 16mm; }
+          body{
+            font-family: "TH Sarabun New", "Sarabun", Arial, sans-serif;
+            color:#111827;
+            font-size:16px;
+            line-height:1.45;
+          }
+          .title{
+            text-align:center;
+            font-size:24px;
+            font-weight:700;
+            margin-bottom:4px;
+          }
+          .subtitle{
+            text-align:center;
+            font-size:16px;
+            margin-bottom:18px;
+            color:#374151;
+          }
+          .info{
+            margin-bottom:14px;
+            padding:10px 12px;
+            border:1px solid #d1d5db;
+            border-radius:8px;
+            background:#f9fafb;
+          }
+          .grid{
+            display:grid;
+            grid-template-columns:1fr 1fr;
+            gap:10px;
+            margin-bottom:16px;
+          }
+          .box{
+            border:1px solid #d1d5db;
+            border-radius:8px;
+            padding:10px 12px;
+          }
+          .box .label{
+            font-size:14px;
+            color:#6b7280;
+          }
+          .box .value{
+            font-size:24px;
+            font-weight:700;
+            margin-top:4px;
+          }
+          .period{
+            margin-top:14px;
+            border:1px solid #d1d5db;
+            border-radius:8px;
+            padding:12px;
+            page-break-inside:avoid;
+          }
+          .period-title{
+            font-size:18px;
+            font-weight:700;
+            margin-bottom:4px;
+          }
+          .period-sub{
+            font-size:14px;
+            color:#4b5563;
+            margin-bottom:8px;
+          }
+          .tbl{
+            width:100%;
+            border-collapse:collapse;
+          }
+          .tbl th, .tbl td{
+            border:1px solid #d1d5db;
+            padding:8px 10px;
+            text-align:left;
+          }
+          .tbl th{
+            background:#f3f4f6;
+          }
+          .sign{
+            margin-top:36px;
+            display:grid;
+            grid-template-columns:1fr 1fr;
+            gap:24px;
+          }
+          .sign-box{
+            text-align:center;
+            margin-top:36px;
+          }
+          .line{
+            margin:28px auto 6px;
+            width:220px;
+            border-top:1px solid #111827;
+          }
+          .print-date{
+            margin-top:16px;
+            font-size:14px;
+            color:#4b5563;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="title">รายงานสรุปสถิติการลาและการปฏิบัติงาน</div>
+        <div class="subtitle">ปีงบประมาณ 1 ตุลาคม 2568 - 30 กันยายน 2569</div>
+
+        <div class="info">
+          <b>ชื่อบุคลากร:</b> ${staff.FullName || "-"}<br>
+          <b>รหัสบุคลากร:</b> ${staff.StaffID || "-"}
+        </div>
+
+        <div class="grid">
+          <div class="box">
+            <div class="label">วันลาพักผ่อนสะสม</div>
+            <div class="value">${vac.CarryPrev ?? 0}</div>
+          </div>
+          <div class="box">
+            <div class="label">วันลาพักผ่อนประจำปี</div>
+            <div class="value">${vac.GrantedThisFY ?? 0}</div>
+          </div>
+          <div class="box">
+            <div class="label">วันพักผ่อนที่ลาได้สูงสุด</div>
+            <div class="value">${vac.AccumulateCap ?? 0}</div>
+          </div>
+          <div class="box">
+            <div class="label">วันลาพักผ่อนที่ลาได้ในปีงบประมาณนี้</div>
+            <div class="value">${vac.AllowedThisFY ?? 0}</div>
+          </div>
+          <div class="box">
+            <div class="label">ใช้ลาพักผ่อนแล้วทั้งปีงบประมาณ</div>
+            <div class="value">${vac.UsedFY ?? 0}</div>
+          </div>
+          <div class="box">
+            <div class="label">วันลาพักผ่อนคงเหลือ</div>
+            <div class="value">${vac.RemainFY ?? 0}</div>
+          </div>
+        </div>
+
+        ${block("รอบที่ 1", periods.P1)}
+        ${block("รอบที่ 2", periods.P2)}
+        ${block("ปีงบประมาณ", periods.FY)}
+
+        <div class="sign">
+          <div class="sign-box">
+            <div class="line"></div>
+            <div>ผู้จัดทำรายงาน</div>
+          </div>
+          <div class="sign-box">
+            <div class="line"></div>
+            <div>ผู้ตรวจสอบ/ผู้บังคับบัญชา</div>
+          </div>
+        </div>
+
+        <div class="print-date">
+          พิมพ์เมื่อ: ${new Date().toLocaleString("th-TH")}
+        </div>
+
+        <script>
+          window.onload = function(){
+            window.print();
+            window.onafterprint = function(){ window.close(); };
+          };
+        <\/script>
+      </body>
+      </html>
+    `;
+
+    const w = window.open("", "_blank", "width=960,height=900");
+    if(!w){
+      showWarn("เบราว์เซอร์บล็อกหน้าต่างพิมพ์ กรุณาอนุญาต pop-up");
+      return;
+    }
+    w.document.open();
+    w.document.write(html);
+    w.document.close();
+  }
+
   function renderStaffTable(){
     const tb = $("staffTbody");
     if(!STAFF.length){
       tb.innerHTML = `<tr><td colspan="6" style="color:#64748b">ยังไม่มีข้อมูล</td></tr>`;
       return;
     }
+
     tb.innerHTML = STAFF.map(s=>{
       const active = (s.IsActive !== false);
       return `
@@ -1051,6 +1350,7 @@
     const IsActive = $("aIsActive").value;
 
     if(!StaffID || !FullName) return aWarn("กรุณากรอก StaffID และ ชื่อ-สกุล");
+
     setLoading(true, "กำลังบันทึกบุคลากร…");
     try{
       const res = await jsonp({ act:"upsertStaff", StaffID, FullName, Position, Department, CalendarTag, IsActive });
@@ -1068,6 +1368,7 @@
   async function setActive(staffId, isActive){
     const s = STAFF.find(x=>x.StaffID===staffId);
     if(!s) return;
+
     setLoading(true, "กำลังอัปเดตสถานะ…");
     try{
       const res = await jsonp({
@@ -1125,6 +1426,7 @@
       aClear();
       const res = await jsonp({ act:"bootstrap" });
       if(!res.ok) return aWarn(res.message || "โหลดข้อมูลไม่สำเร็จ");
+
       STAFF = res.data.staff || [];
       POLICY = res.data.policy || {};
 
@@ -1143,6 +1445,7 @@
   $("btnRefresh").onclick = ()=>calendar && calendar.refetchEvents();
   $("btnSave").onclick = saveEvent;
   $("btnCalcStatsAll").onclick = ()=>calcStatsAll();
+  $("btnPrintStats").onclick = ()=>printStatsReport();
   $("pStaffSel").addEventListener("change", ()=>loadPolicyToForm());
 
   (async ()=>{
