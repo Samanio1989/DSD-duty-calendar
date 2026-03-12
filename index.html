@@ -793,20 +793,27 @@
 
   function buildCalendar(){
     const el = document.getElementById("calendar");
+
     calendar = new FullCalendar.Calendar(el, {
       locale: "th",
       initialView: "dayGridMonth",
       height: "auto",
       nowIndicator: true,
       dayMaxEvents: true,
+      eventDisplay: "block",
+      displayEventTime: false,
+      nextDayThreshold: "00:00:00",
+
       headerToolbar: {
         left: "today prev,next",
         center: "title",
         right: "dayGridMonth,timeGridWeek,timeGridDay"
       },
+
       datesSet: (info)=>{
         setMonthBackground(info.start);
       },
+
       events: async (info, success, failure)=>{
         try{
           const res = await jsonp({
@@ -818,7 +825,7 @@
 
           if(!res.ok) throw new Error(res.message || "โหลดเหตุการณ์ไม่สำเร็จ");
 
-          const events = (res.data||[]).map(ev=>{
+          const events = (res.data || []).map(ev=>{
             const isHoliday = !!(ev.extendedProps && ev.extendedProps.holiday);
             const typeKey = (ev.extendedProps && ev.extendedProps.typeKey) ? ev.extendedProps.typeKey : "";
             return { ...ev, ...colorByTypeKey(typeKey, isHoliday) };
@@ -830,10 +837,12 @@
           showWarn(err.message || "โหลดเหตุการณ์ไม่สำเร็จ");
         }
       },
+
       eventClick: (info) => {
         if (info.event.extendedProps && info.event.extendedProps.holiday) return;
         openModal(info.event);
       },
+
       eventDidMount: (arg)=>{
         arg.el.title = arg.event.title;
       }
