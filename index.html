@@ -21,14 +21,12 @@
       --shadow:0 14px 40px rgba(15,23,42,.08);
       --r:18px;
 
-      /* สีตามประเภท */
       --c-travel:#2563eb;
       --c-sick:#ef4444;
       --c-personal:#f43f5e;
       --c-vac:#f59e0b;
       --c-holiday:#94a3b8;
 
-      /* สีประจำวัน */
       --dow-alpha: 0.10;
       --dow-border-alpha: 0.18;
     }
@@ -108,7 +106,6 @@
     .pill{display:flex;gap:10px;align-items:center;padding:10px 12px;border:1px dashed rgba(226,232,240,.95);border-radius:16px;background:rgba(255,255,255,.9);font-size:13px}
     .dot{width:10px;height:10px;border-radius:999px}
 
-    /* ===== Calendar wrapper with monthly background image ===== */
     .calWrap{
       position:relative;
       border-radius:16px;
@@ -141,7 +138,6 @@
     .fc .fc-daygrid-day-number{font-weight:800;color:#0f172a}
     .fc .fc-bg-event{ opacity: .30; }
 
-    /* ✅ สีประจำวัน (พื้นหลังคอลัมน์) */
     .fc .fc-daygrid-day-frame{ position: relative; overflow:hidden; }
     .fc .fc-daygrid-day-frame::before{
       content:"";
@@ -178,7 +174,6 @@
       outline-offset: -2px;
     }
 
-    /* Stats UI */
     .statGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
     @media(max-width:640px){.statGrid{grid-template-columns:1fr}}
     .statCard{border:1px solid rgba(226,232,240,.95);background:rgba(255,255,255,.9);border-radius:16px;padding:12px}
@@ -186,7 +181,6 @@
     .big{font-size:26px;font-weight:900;margin-top:4px}
     .smallmuted{font-size:12px;color:#64748b;margin-top:4px;line-height:1.5}
 
-    /* Admin table */
     table{width:100%;border-collapse:separate;border-spacing:0}
     th,td{padding:10px 10px;border-bottom:1px solid rgba(226,232,240,.9);text-align:left;font-size:14px}
     th{font-size:12px;color:#475569}
@@ -199,7 +193,6 @@
     }
     .right{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}
 
-    /* overlay loading */
     #loading{
       position:fixed; inset:0;
       display:none; align-items:center; justify-content:center;
@@ -346,8 +339,8 @@
       <div class="grid" style="grid-template-columns:1.05fr .95fr">
         <div class="card">
           <div class="card-h">
-            <div class="t"><i class="fa-solid fa-chart-column"></i> สถิติการทำงาน</div>
-            <div class="hint">ปีงบประมาณ / รอบ 1 / รอบ 2</div>
+            <div class="t"><i class="fa-solid fa-chart-column"></i> สถิติการทำงานและวันลาพักผ่อน</div>
+            <div class="hint">แสดงรอบประเมิน 1 / รอบประเมิน 2 / ปีงบประมาณ</div>
           </div>
           <div class="card-b">
             <div class="row">
@@ -356,18 +349,15 @@
                 <select id="stStaff"></select>
               </div>
               <div>
-                <div class="hint"><b><i class="fa-solid fa-layer-group"></i> ช่วงรายงาน</b></div>
-                <select id="stPeriod">
-                  <option value="FY" selected>ปีงบประมาณ 1 ต.ค. 68 - 30 ก.ย. 69</option>
-                  <option value="P1">รอบ 1: 1 ต.ค. 68 - 31 มี.ค. 69</option>
-                  <option value="P2">รอบ 2: 1 เม.ย. 69 - 30 ก.ย. 69</option>
-                </select>
+                <div class="hint"><b><i class="fa-solid fa-circle-info"></i> ช่วงที่แสดง</b></div>
+                <input value="รอบที่ 1 + รอบที่ 2 + ปีงบประมาณ" disabled>
               </div>
             </div>
 
             <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
-              <button class="btn primary" id="btnCalcStats"><i class="fa-solid fa-calculator"></i> คำนวณสถิติ</button>
-              <button class="btn" id="btnCalcFYAll"><i class="fa-solid fa-chart-simple"></i> ดู FY + รอบ 1/2</button>
+              <button class="btn primary" id="btnCalcStatsAll">
+                <i class="fa-solid fa-calculator"></i> คำนวณสถิติทั้งหมด
+              </button>
             </div>
 
             <div id="stMsg" class="hint" style="margin-top:10px;color:#64748b"></div>
@@ -475,9 +465,9 @@
 
             <div class="hint"><b><i class="fa-solid fa-suitcase-rolling"></i> ตั้งค่าวันลาพักผ่อนรายบุคคล</b></div>
             <div class="hint">
-              CarryPrev = คงเหลือจากปีงบก่อนหน้า<br>
-              GrantedThisFY = ได้รับปีงบนี้<br>
-              AccumulateCap = เพดานวันสะสม (0/ว่าง = ไม่จำกัด)
+              CarryPrev = วันลาพักผ่อนสะสมจากปีก่อน<br>
+              GrantedThisFY = วันลาพักผ่อนประจำปี<br>
+              AccumulateCap = วันพักผ่อนที่ลาได้สูงสุด
             </div>
 
             <div style="margin-top:10px">
@@ -513,7 +503,6 @@
   </div>
 </main>
 
-<!-- Loading overlay -->
 <div id="loading">
   <div class="loadCard">
     <div class="spin"></div>
@@ -524,7 +513,6 @@
   </div>
 </div>
 
-<!-- EDIT MODAL -->
 <div id="modal" style="position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(15,23,42,.45);z-index:9999;padding:14px">
   <div style="width:min(560px,100%);background:rgba(255,255,255,.98);border:1px solid rgba(226,232,240,.95);border-radius:18px;box-shadow:0 18px 50px rgba(15,23,42,.18);overflow:hidden">
     <div style="padding:14px;border-bottom:1px solid rgba(226,232,240,.9);display:flex;justify-content:space-between;align-items:center;gap:10px">
@@ -592,10 +580,8 @@
 </div>
 
 <script>
-  // ✅ WebApp URL
   const API_BASE = "https://script.google.com/macros/s/AKfycbxaSE_nedSXF89df3zlPUITQJaWUdofdRmkYajPxWU6o_I--s12eHHStShBhSZImoyquQ/exec".trim();
 
-  // ✅ ภาพพื้นหลังรายเดือน (ใส่รูปไว้ใน repo: /assets/bg/01.png ... 12.png)
   const MONTH_BG = {
     1:  "url('assets/bg/01.png')",
     2:  "url('assets/bg/02.png')",
@@ -624,7 +610,6 @@
     el.style.display = on ? "flex" : "none";
   }
 
-  // JSONP helper (แก้ CORS สำหรับ GitHub Pages)
   function jsonp(params){
     return new Promise((resolve, reject)=>{
       const cb = "cb_" + Math.random().toString(36).slice(2);
@@ -656,7 +641,6 @@
   }
   function jsq(s){ return String(s ?? '').replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
 
-  // สีตามประเภท
   function colorByTypeKey(typeKey, isHoliday){
     if(isHoliday) return { display:"background", backgroundColor:"rgba(148,163,184,.18)" };
     if(typeKey === "TRAVEL") return { backgroundColor:"var(--c-travel)", borderColor:"var(--c-travel)", textColor:"#fff" };
@@ -666,7 +650,6 @@
     return {};
   }
 
-  // Tabs
   function showSection(key){
     const secCal = $("secCal");
     const secStats = $("secStats");
@@ -723,6 +706,7 @@
       $("endDate").value = ymd;
 
       bindStatsStaffDropdown();
+      renderStaffTable();
       showOk("โหลดข้อมูลเรียบร้อย");
     }catch(err){
       showWarn(err?.message || "โหลดข้อมูลไม่สำเร็จ");
@@ -739,17 +723,14 @@
       height: "auto",
       nowIndicator: true,
       dayMaxEvents: true,
-
       headerToolbar: {
         left: "today prev,next",
         center: "title",
         right: "dayGridMonth,timeGridWeek,timeGridDay"
       },
-
       datesSet: (info)=>{
         setMonthBackground(info.start);
       },
-
       events: async (info, success, failure)=>{
         try{
           const res = await jsonp({
@@ -772,12 +753,10 @@
           showWarn(err.message || "โหลดเหตุการณ์ไม่สำเร็จ");
         }
       },
-
       eventClick: (info) => {
         if (info.event.extendedProps && info.event.extendedProps.holiday) return;
         openModal(info.event);
       },
-
       eventDidMount: (arg)=>{
         arg.el.title = arg.event.title;
       }
@@ -814,7 +793,6 @@
     }
   }
 
-  // ===== Edit modal =====
   function openModal(ev) {
     CURRENT_EVENT = ev;
     $("mStaff").innerHTML = $("staffSel").innerHTML;
@@ -824,6 +802,7 @@
 
     const staffId = (ev.extendedProps && ev.extendedProps.staffId) ? ev.extendedProps.staffId : "";
     const typeKey = (ev.extendedProps && ev.extendedProps.typeKey) ? ev.extendedProps.typeKey : "";
+    const extra = (ev.extendedProps && ev.extendedProps.extra) ? ev.extendedProps.extra : "";
 
     $("mStaff").value = staffId || $("staffSel").value;
     $("mType").value = typeKey || "VACATION";
@@ -834,16 +813,22 @@
       const d = new Date(ev.endStr);
       d.setDate(d.getDate() - 1);
       endStr = d.toISOString().slice(0,10);
-    } else endStr = startStr;
+    } else {
+      endStr = startStr;
+    }
 
     $("mStart").value = startStr;
     $("mEnd").value = endStr;
     $("mAllDay").value = ev.allDay ? "true" : "false";
-    $("mExtra").value = "";
+    $("mExtra").value = extra || "";
 
     $("modal").style.display = "flex";
   }
-  function closeModal() { $("modal").style.display = "none"; CURRENT_EVENT = null; }
+
+  function closeModal() {
+    $("modal").style.display = "none";
+    CURRENT_EVENT = null;
+  }
 
   async function saveEdit() {
     if (!CURRENT_EVENT) return;
@@ -888,69 +873,115 @@
     }
   }
 
-  // ===== Stats =====
   function bindStatsStaffDropdown(){
     const el = $("stStaff");
     if(!el) return;
     el.innerHTML = (STAFF||[]).map(s=>`<option value="${s.StaffID}">${s.FullName}</option>`).join("");
   }
 
-  function periodRange(period){
-    if(period === "P1") return { start:"2025-10-01", end:"2026-03-31" };
-    if(period === "P2") return { start:"2026-04-01", end:"2026-09-30" };
-    return { start:"2025-10-01", end:"2026-09-30" };
-  }
+  function renderStatsAllPeriods(data){
+    const staffName = (data.staff && data.staff.FullName) ? data.staff.FullName : "";
+    const vac = data.vacation || {};
+    const periods = data.periods || {};
 
-  function renderStats(data){
-    const c = data.counts || {};
-    const v = data.vacation || {};
-    const r = data.range || {};
-    const name = (data.staff && data.staff.FullName) ? data.staff.FullName : "";
-
-    $("stResult").innerHTML = `
-      <div class="hint"><b>${escapeHtml(name)}</b></div>
-      <div class="smallmuted">ช่วงรายงาน: ${escapeHtml(r.start)} ถึง ${escapeHtml(r.end)} • วันทำการ ${r.workdays ?? "-"} วัน</div>
-
-      <div class="statGrid">
-        <div class="statCard">
-          <b><span class="dot" style="background:var(--c-travel)"></span> ไปราชการ</b>
-          <div class="big">${c.TRAVEL ?? 0}</div>
-        </div>
-        <div class="statCard">
-          <b><span class="dot" style="background:var(--c-sick)"></span> ลาป่วย</b>
-          <div class="big">${c.SICK ?? 0}</div>
-        </div>
-        <div class="statCard">
-          <b><span class="dot" style="background:var(--c-personal)"></span> ลากิจ</b>
-          <div class="big">${c.PERSONAL ?? 0}</div>
-        </div>
-        <div class="statCard">
-          <b><span class="dot" style="background:var(--c-vac)"></span> ลาพักผ่อน</b>
-          <div class="big">${c.VACATION ?? 0}</div>
+    function block(label, d){
+      const c = (d && d.counts) ? d.counts : {};
+      const r = (d && d.range) ? d.range : {};
+      return `
+        <div class="statCard" style="margin-top:12px">
+          <b><i class="fa-solid fa-calendar-days"></i> ${label}</b>
           <div class="smallmuted">
-            CarryPrev ${v.CarryPrev ?? 0} • Granted ${v.GrantedThisFY ?? 0} • Cap ${v.AccumulateCap ?? 0}<br>
-            ใช้ทั้งปีงบ ${v.UsedFY ?? 0} / รวมสิทธิ ${v.TotalFY ?? 0} • คงเหลือ ${v.RemainFY ?? 0}
+            ${escapeHtml(r.start || "-")} ถึง ${escapeHtml(r.end || "-")}
+            • วันทำการ ${r.workdays ?? 0} วัน
+          </div>
+
+          <div class="statGrid" style="margin-top:10px">
+            <div class="statCard">
+              <b><span class="dot" style="background:var(--c-travel)"></span> ไปราชการ</b>
+              <div class="big">${c.TRAVEL ?? 0}</div>
+            </div>
+            <div class="statCard">
+              <b><span class="dot" style="background:var(--c-sick)"></span> ลาป่วย</b>
+              <div class="big">${c.SICK ?? 0}</div>
+            </div>
+            <div class="statCard">
+              <b><span class="dot" style="background:var(--c-personal)"></span> ลากิจ</b>
+              <div class="big">${c.PERSONAL ?? 0}</div>
+            </div>
+            <div class="statCard">
+              <b><span class="dot" style="background:var(--c-vac)"></span> ลาพักผ่อน</b>
+              <div class="big">${c.VACATION ?? 0}</div>
+            </div>
           </div>
         </div>
+      `;
+    }
+
+    $("stResult").innerHTML = `
+      <div class="hint"><b>${escapeHtml(staffName)}</b></div>
+
+      <div class="statGrid" style="margin-top:10px">
+        <div class="statCard">
+          <b><i class="fa-solid fa-layer-group"></i> วันลาพักผ่อนสะสม</b>
+          <div class="big">${vac.CarryPrev ?? 0}</div>
+        </div>
+
+        <div class="statCard">
+          <b><i class="fa-solid fa-calendar-plus"></i> วันลาพักผ่อนประจำปี</b>
+          <div class="big">${vac.GrantedThisFY ?? 0}</div>
+        </div>
+
+        <div class="statCard">
+          <b><i class="fa-solid fa-shield-halved"></i> วันพักผ่อนที่ลาได้สูงสุด</b>
+          <div class="big">${vac.AccumulateCap ?? 0}</div>
+        </div>
+
+        <div class="statCard">
+          <b><i class="fa-solid fa-calculator"></i> วันลาพักผ่อนที่ลาได้ในปีงบประมาณนี้</b>
+          <div class="big">${vac.AllowedThisFY ?? 0}</div>
+          <div class="smallmuted">
+            คำนวณจาก (วันลาพักผ่อนสะสม + วันลาพักผ่อนประจำปี)
+            และต้องไม่เกินวันพักผ่อนที่ลาได้สูงสุด
+          </div>
+        </div>
+
+        <div class="statCard">
+          <b><i class="fa-solid fa-plane-departure"></i> ใช้ลาพักผ่อนแล้วทั้งปีงบประมาณ</b>
+          <div class="big">${vac.UsedFY ?? 0}</div>
+        </div>
+
+        <div class="statCard">
+          <b><i class="fa-solid fa-hourglass-half"></i> วันลาพักผ่อนคงเหลือ</b>
+          <div class="big">${vac.RemainFY ?? 0}</div>
+        </div>
       </div>
+
+      ${block("รอบที่ 1", periods.P1)}
+      ${block("รอบที่ 2", periods.P2)}
+      ${block("ปีงบประมาณ", periods.FY)}
     `;
   }
 
-  // ✅ FIX: ใส่ try/catch เพื่อไม่ให้ค้าง และแสดง error ชัดเจน
-  async function calcStats(period){
+  async function calcStatsAll(){
     const staffId = $("stStaff").value;
-    const {start,end} = periodRange(period);
-    $("stMsg").textContent = "กำลังคำนวณ…";
-    setLoading(true, "กำลังคำนวณสถิติ…");
+    if(!staffId){
+      showWarn("กรุณาเลือกบุคลากร");
+      return;
+    }
+
+    $("stMsg").textContent = "กำลังคำนวณรอบที่ 1 / รอบที่ 2 / ปีงบประมาณ…";
+    setLoading(true, "กำลังคำนวณสถิติทั้งหมด…");
+
     try{
-      const res = await jsonp({ act:"stats", StaffID: staffId, start, end });
+      const res = await jsonp({ act:"statsAllPeriods", StaffID: staffId });
       if(!res || !res.ok){
         $("stMsg").textContent = "";
-        showWarn((res && res.message) ? res.message : "คำนวณสถิติไม่สำเร็จ (API ไม่ตอบกลับ)");
+        showWarn((res && res.message) ? res.message : "คำนวณสถิติไม่สำเร็จ");
         return;
       }
+
       $("stMsg").textContent = "คำนวณแล้ว";
-      renderStats(res.data);
+      renderStatsAllPeriods(res.data);
     }catch(err){
       $("stMsg").textContent = "";
       showWarn(err?.message || "คำนวณสถิติไม่สำเร็จ (JSONP error)");
@@ -959,61 +990,6 @@
     }
   }
 
-  // ✅ FIX: ใส่ try/catch + ตรวจ bad response
-  async function calcFYAll(){
-    const staffId = $("stStaff").value;
-    $("stMsg").textContent = "กำลังคำนวณ FY + รอบ 1/2…";
-    setLoading(true, "กำลังคำนวณ FY + รอบ 1/2…");
-    try{
-      const fy = periodRange("FY"), p1 = periodRange("P1"), p2 = periodRange("P2");
-
-      const [rFY, rP1, rP2] = await Promise.all([
-        jsonp({ act:"stats", StaffID: staffId, start: fy.start, end: fy.end }),
-        jsonp({ act:"stats", StaffID: staffId, start: p1.start, end: p1.end }),
-        jsonp({ act:"stats", StaffID: staffId, start: p2.start, end: p2.end }),
-      ]);
-
-      const bad = [rFY, rP1, rP2].find(x=>!x || !x.ok);
-      if(bad){
-        $("stMsg").textContent = "";
-        showWarn(bad?.message || "คำนวณไม่สำเร็จ (มีช่วงหนึ่ง API ตอบ error)");
-        return;
-      }
-
-      $("stMsg").textContent = "คำนวณแล้ว (FY / รอบ 1 / รอบ 2)";
-      const rows = [
-        ["ปีงบประมาณ", rFY.data],
-        ["รอบ 1", rP1.data],
-        ["รอบ 2", rP2.data],
-      ].map(([label,d])=>{
-        const c = d.counts || {};
-        return `<tr>
-          <td><b>${label}</b><div class="smallmuted">${d.range.start} ถึง ${d.range.end}</div></td>
-          <td>${c.TRAVEL ?? 0}</td>
-          <td>${c.SICK ?? 0}</td>
-          <td>${c.PERSONAL ?? 0}</td>
-          <td>${c.VACATION ?? 0}</td>
-        </tr>`;
-      }).join("");
-
-      $("stResult").innerHTML = `
-        <div class="hint"><b>${escapeHtml((rFY.data.staff && rFY.data.staff.FullName) || "")}</b></div>
-        <div style="margin-top:10px;overflow:auto;border:1px solid rgba(226,232,240,.9);border-radius:16px">
-          <table>
-            <thead><tr><th>ช่วง</th><th>ไปราชการ</th><th>ลาป่วย</th><th>ลากิจ</th><th>ลาพักผ่อน</th></tr></thead>
-            <tbody>${rows}</tbody>
-          </table>
-        </div>
-      `;
-    }catch(err){
-      $("stMsg").textContent = "";
-      showWarn(err?.message || "คำนวณไม่สำเร็จ (JSONP error)");
-    }finally{
-      setLoading(false);
-    }
-  }
-
-  // ===== Admin =====
   function renderStaffTable(){
     const tb = $("staffTbody");
     if(!STAFF.length){
@@ -1163,17 +1139,12 @@
     }
   }
 
-  // Bind buttons
   $("btnReload").onclick = loadBootstrap;
   $("btnRefresh").onclick = ()=>calendar && calendar.refetchEvents();
   $("btnSave").onclick = saveEvent;
-
-  $("btnCalcStats").onclick = ()=>calcStats($("stPeriod").value);
-  $("btnCalcFYAll").onclick = ()=>calcFYAll();
-
+  $("btnCalcStatsAll").onclick = ()=>calcStatsAll();
   $("pStaffSel").addEventListener("change", ()=>loadPolicyToForm());
 
-  // Init
   (async ()=>{
     buildCalendar();
     await loadBootstrap();
