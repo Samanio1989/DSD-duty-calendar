@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>DSD Duty Calendar</title>
+  <title>DSD Duty Calendar (Debug)</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -207,6 +207,37 @@
     }
     .right{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}
 
+    .debug-box{
+      margin-top:12px;
+      border:1px solid rgba(59,130,246,.25);
+      background:rgba(239,246,255,.9);
+      border-radius:16px;
+      padding:12px;
+    }
+    .debug-title{
+      font-weight:900;
+      color:#1d4ed8;
+      margin-bottom:8px;
+      display:flex;
+      gap:8px;
+      align-items:center;
+    }
+    .debug-pre{
+      margin:0;
+      white-space:pre-wrap;
+      word-break:break-word;
+      font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size:12px;
+      line-height:1.5;
+      color:#0f172a;
+      background:#fff;
+      border:1px solid rgba(226,232,240,.95);
+      border-radius:12px;
+      padding:10px;
+      max-height:280px;
+      overflow:auto;
+    }
+
     #loading{
       position:fixed; inset:0;
       display:none; align-items:center; justify-content:center;
@@ -230,17 +261,6 @@
       animation: sp 0.9s linear infinite;
     }
     @keyframes sp { to { transform: rotate(360deg); } }
-
-    @media print {
-      body{ background:#fff !important; }
-      header, .tabs, .btn, #loading, #modal{ display:none !important; }
-      .wrap{ max-width:100% !important; padding:0 !important; }
-      .card{
-        box-shadow:none !important;
-        border:1px solid #dbe3ee !important;
-        background:#fff !important;
-      }
-    }
   </style>
 </head>
 
@@ -249,12 +269,12 @@
   <div class="wrap">
     <div class="top">
       <div class="brand">
-        <div class="logo"><i class="fa-solid fa-calendar-check"></i></div>
+        <div class="logo"><i class="fa-solid fa-bug"></i></div>
         <div>
-          <h1>ปฏิทินวันลาและการปฏิบัติงาน (หน่วยงานราชการ)</h1>
+          <h1>ปฏิทินวันลาและการปฏิบัติงาน (Debug)</h1>
           <div class="sub">
             <span class="chip"><i class="fa-solid fa-clock"></i> ปีงบประมาณ 1 ต.ค. 2568 - 30 ก.ย. 2569</span>
-            <span class="chip"><i class="fa-solid fa-circle-info"></i> นับวันทำการ จ.-ศ. ไม่รวมวันหยุด</span>
+            <span class="chip"><i class="fa-solid fa-code"></i> เวอร์ชันตรวจสอบ months/debug API</span>
           </div>
         </div>
       </div>
@@ -280,7 +300,7 @@
         <div class="card">
           <div class="card-h">
             <div class="t"><i class="fa-solid fa-calendar"></i> ปฏิทิน</div>
-            <div class="hint"><i class="fa-solid fa-image"></i> มีภาพพื้นหลังวันสำคัญตามเดือน + สีประจำวัน</div>
+            <div class="hint"><i class="fa-solid fa-image"></i> debug view</div>
           </div>
           <div class="card-b">
             <div class="calWrap" id="calWrap">
@@ -328,12 +348,12 @@
               <div>
                 <div class="hint"><b><i class="fa-regular fa-clock"></i> รูปแบบเวลา</b></div>
                 <select id="allDaySel">
-                  <option value="true" selected>ทั้งวัน (All-day) — แนะนำ</option>
+                  <option value="true" selected>ทั้งวัน (All-day)</option>
                   <option value="false">มีเวลา (09:00-16:30)</option>
                 </select>
               </div>
               <div>
-                <div class="hint"><b><i class="fa-solid fa-pen"></i> รายละเอียดเพิ่ม</b> (ไม่บังคับ)</div>
+                <div class="hint"><b><i class="fa-solid fa-pen"></i> รายละเอียดเพิ่ม</b></div>
                 <input id="extra" placeholder="เช่น อบรม/ประชุม/ธุระ...">
               </div>
             </div>
@@ -347,11 +367,7 @@
               <div class="pill"><span class="dot" style="background:var(--c-sick)"></span><b>ลาป่วย</b></div>
               <div class="pill"><span class="dot" style="background:var(--c-personal)"></span><b>ลากิจ</b></div>
               <div class="pill"><span class="dot" style="background:var(--c-vac)"></span><b>ลาพักผ่อน</b></div>
-              <div class="pill"><span class="dot" style="background:var(--c-holiday)"></span><b>วันหยุดนักขัตฤกษ์</b> (พื้นหลัง)</div>
-            </div>
-
-            <div class="hint" style="margin-top:10px">
-              * คลิกเหตุการณ์เพื่อแก้ไข/ลบ (ยกเว้นวันหยุด)
+              <div class="pill"><span class="dot" style="background:var(--c-holiday)"></span><b>วันหยุดนักขัตฤกษ์</b></div>
             </div>
           </div>
         </div>
@@ -362,8 +378,8 @@
       <div class="grid" style="grid-template-columns:1.05fr .95fr">
         <div class="card">
           <div class="card-h">
-            <div class="t"><i class="fa-solid fa-chart-column"></i> สถิติการทำงานและวันลาพักผ่อน</div>
-            <div class="hint">แสดงรอบประเมิน 1 / รอบประเมิน 2 / ปีงบประมาณ / รายเดือน</div>
+            <div class="t"><i class="fa-solid fa-chart-column"></i> สถิติการทำงาน (Debug)</div>
+            <div class="hint">ตรวจ months / API response</div>
           </div>
           <div class="card-b">
             <div class="row">
@@ -381,14 +397,13 @@
               <button class="btn primary" id="btnCalcStatsAll">
                 <i class="fa-solid fa-calculator"></i> คำนวณสถิติทั้งหมด
               </button>
-              <button class="btn" id="btnPrintStats">
-                <i class="fa-solid fa-print"></i> พิมพ์ผลสรุป
-              </button>
             </div>
 
             <div id="stMsg" class="hint" style="margin-top:10px;color:#64748b"></div>
-            <div class="print-note" style="margin-top:8px">
-              พิมพ์ได้หลังจากคำนวณสถิติแล้ว ระบบจะเปิดหน้ารายงานสำหรับพิมพ์หรือบันทึกเป็น PDF
+
+            <div class="debug-box">
+              <div class="debug-title"><i class="fa-solid fa-bug"></i> Debug: months / API response</div>
+              <pre id="debugOut" class="debug-pre">ยังไม่มีข้อมูล debug</pre>
             </div>
           </div>
         </div>
@@ -414,11 +429,6 @@
             </div>
           </div>
           <div class="card-b">
-            <div class="hint">
-              - ปุ่ม “ปิดใช้งาน” = ไม่โชว์ในระบบ แต่ยังเก็บประวัติเดิมไว้<br>
-              - ตั้งค่าวันลาพักผ่อนรายบุคคลได้ทางฟอร์มด้านขวา
-            </div>
-
             <div style="margin-top:10px;overflow:auto;border:1px solid rgba(226,232,240,.9);border-radius:16px">
               <table>
                 <thead>
@@ -447,7 +457,6 @@
             <div class="warnbox" id="adminWarn"><i class="fa-solid fa-triangle-exclamation" style="margin-top:2px"></i><div id="adminWarnText"></div></div>
             <div class="okbox" id="adminOk"><i class="fa-solid fa-circle-check" style="margin-top:2px"></i><div id="adminOkText"></div></div>
 
-            <div class="hint"><b>ข้อมูลบุคลากร</b></div>
             <div class="row" style="margin-top:8px">
               <div>
                 <div class="hint">StaffID (รหัส)</div>
@@ -472,7 +481,7 @@
 
             <div class="row" style="margin-top:10px">
               <div>
-                <div class="hint">CalendarTag (ไม่บังคับ)</div>
+                <div class="hint">CalendarTag</div>
                 <input id="aTag" placeholder="เช่น DSD">
               </div>
               <div>
@@ -490,13 +499,6 @@
             </div>
 
             <hr style="border:none;border-top:1px solid rgba(226,232,240,.9);margin:14px 0">
-
-            <div class="hint"><b><i class="fa-solid fa-suitcase-rolling"></i> ตั้งค่าวันลาพักผ่อนรายบุคคล</b></div>
-            <div class="hint">
-              CarryPrev = วันลาพักผ่อนสะสมจากปีก่อน<br>
-              GrantedThisFY = วันลาพักผ่อนประจำปี<br>
-              AccumulateCap = วันพักผ่อนที่ลาได้สูงสุด
-            </div>
 
             <div style="margin-top:10px">
               <div class="hint">เลือกบุคลากร</div>
@@ -599,10 +601,6 @@
         <button class="btn good" onclick="saveEdit()"><i class="fa-solid fa-floppy-disk"></i> บันทึกการแก้ไข</button>
         <button class="btn danger" onclick="deleteEdit()"><i class="fa-solid fa-trash"></i> ลบเหตุการณ์</button>
       </div>
-
-      <div class="hint" style="margin-top:10px">
-        * วันหยุดนักขัตฤกษ์ (พื้นหลัง) ไม่สามารถแก้ไข/ลบ
-      </div>
     </div>
   </div>
 </div>
@@ -625,17 +623,12 @@
     12: "url('assets/bg/12.png')"
   };
 
-  if (!/^https:\/\/script\.google\.com\/macros\/s\/.+\/exec$/.test(API_BASE)) {
-    alert("ตั้งค่า API_BASE ไม่ถูกต้อง\nต้องเป็นลิงก์ Web App ที่ลงท้ายด้วย /exec");
-  }
-
   const $ = (id)=>document.getElementById(id);
 
   let calendar;
   let CURRENT_EVENT = null;
   let STAFF = [];
   let POLICY = {};
-  let LAST_STATS_DATA = null;
 
   function setLoading(on, text){
     const el = $("loading");
@@ -702,20 +695,6 @@
 
   function jsq(s){
     return String(s ?? '').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-  }
-
-  function formatThaiDate(ymd){
-    if(!ymd) return "-";
-    const dt = new Date(ymd + "T00:00:00");
-    if (isNaN(dt.getTime())) return ymd;
-    const months = [
-      "มกราคม","กุมภาพันธ์","มีนาคม","เมษายน","พฤษภาคม","มิถุนายน",
-      "กรกฎาคม","สิงหาคม","กันยายน","ตุลาคม","พฤศจิกายน","ธันวาคม"
-    ];
-    const d = dt.getDate();
-    const m = months[dt.getMonth()];
-    const y = dt.getFullYear() + 543;
-    return `${d} ${m} ${y}`;
   }
 
   function colorByTypeKey(typeKey, isHoliday){
@@ -803,17 +782,14 @@
       eventDisplay: "block",
       displayEventTime: false,
       nextDayThreshold: "00:00:00",
-
       headerToolbar: {
         left: "today prev,next",
         center: "title",
         right: "dayGridMonth,timeGridWeek,timeGridDay"
       },
-
       datesSet: (info)=>{
         setMonthBackground(info.start);
       },
-
       events: async (info, success, failure)=>{
         try{
           const res = await jsonp({
@@ -837,12 +813,10 @@
           showWarn(err.message || "โหลดเหตุการณ์ไม่สำเร็จ");
         }
       },
-
       eventClick: (info) => {
         if (info.event.extendedProps && info.event.extendedProps.holiday) return;
         openModal(info.event);
       },
-
       eventDidMount: (arg)=>{
         arg.el.title = arg.event.title;
       }
@@ -971,12 +945,10 @@
   }
 
   function renderStatsAllPeriods(data){
-    LAST_STATS_DATA = data;
-
     const staffName = (data.staff && data.staff.FullName) ? data.staff.FullName : "";
     const vac = data.vacation || {};
     const periods = data.periods || {};
-    const months = data.months || [];
+    const months = Array.isArray(data.months) ? data.months : [];
 
     function block(label, d, remainValue){
       const c = (d && d.counts) ? d.counts : {};
@@ -1050,10 +1022,6 @@
         <div class="statCard">
           <b><i class="fa-solid fa-calculator"></i> วันลาพักผ่อนที่ลาได้ในปีงบประมาณนี้</b>
           <div class="big">${vac.AllowedThisFY ?? 0}</div>
-          <div class="smallmuted">
-            คำนวณจาก (วันลาพักผ่อนสะสม + วันลาพักผ่อนประจำปี)
-            และต้องไม่เกินวันพักผ่อนที่ลาได้สูงสุด
-          </div>
         </div>
 
         <div class="statCard">
@@ -1073,7 +1041,7 @@
 
       <div class="statCard" style="margin-top:12px">
         <b><i class="fa-solid fa-chart-line"></i> สถิติการรายงานรายเดือน</b>
-        <div class="smallmuted">สรุปการลาและการปฏิบัติงานแยกรายเดือนตลอดปีงบประมาณ</div>
+        <div class="smallmuted">พบ months = ${months.length} รายการ</div>
         <div style="margin-top:10px;overflow:auto;border:1px solid rgba(226,232,240,.9);border-radius:16px">
           <table>
             <thead>
@@ -1106,430 +1074,35 @@
 
     try{
       const res = await jsonp({ act:"statsAllPeriods", StaffID: staffId });
+
       if(!res || !res.ok){
         $("stMsg").textContent = "";
+        $("debugOut").textContent = JSON.stringify(res, null, 2);
         showWarn((res && res.message) ? res.message : "คำนวณสถิติไม่สำเร็จ");
         return;
       }
+
+      console.log("statsAllPeriods =", res.data);
+      console.log("months =", res.data.months);
+
+      const debugText = {
+        apiBase: API_BASE,
+        hasMonths: Array.isArray(res.data.months),
+        monthsLength: Array.isArray(res.data.months) ? res.data.months.length : null,
+        firstMonth: Array.isArray(res.data.months) && res.data.months.length ? res.data.months[0] : null,
+        fullResponse: res.data
+      };
+      $("debugOut").textContent = JSON.stringify(debugText, null, 2);
 
       $("stMsg").textContent = "คำนวณแล้ว";
       renderStatsAllPeriods(res.data);
     }catch(err){
       $("stMsg").textContent = "";
+      $("debugOut").textContent = String(err && err.message ? err.message : err);
       showWarn(err?.message || "คำนวณสถิติไม่สำเร็จ (JSONP error)");
     }finally{
       setLoading(false);
     }
-  }
-
-  function printStatsReport(){
-    if(!LAST_STATS_DATA){
-      showWarn("กรุณาคำนวณสถิติก่อนพิมพ์");
-      return;
-    }
-
-    const data = LAST_STATS_DATA;
-    const staff = data.staff || {};
-    const vac = data.vacation || {};
-    const periods = data.periods || {};
-    const months = data.months || [];
-
-    function block(label, d, remainValue){
-      const c = (d && d.counts) ? d.counts : {};
-      const r = (d && d.range) ? d.range : {};
-      return `
-        <div class="period">
-          <div class="period-head">
-            <div class="period-title">${label}</div>
-            <div class="period-sub">
-              ${formatThaiDate(r.start)} - ${formatThaiDate(r.end)}
-            </div>
-          </div>
-
-          <table class="tbl">
-            <thead>
-              <tr>
-                <th>รายการ</th>
-                <th>จำนวนวัน</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr><td>ไปราชการ</td><td>${c.TRAVEL ?? 0}</td></tr>
-              <tr><td>ลาป่วย</td><td>${c.SICK ?? 0}</td></tr>
-              <tr><td>ลากิจ</td><td>${c.PERSONAL ?? 0}</td></tr>
-              <tr><td>ลาพักผ่อน</td><td>${c.VACATION ?? 0}</td></tr>
-              <tr class="remain-row"><td>วันลาพักผ่อนคงเหลือ</td><td>${remainValue ?? 0}</td></tr>
-            </tbody>
-          </table>
-        </div>
-      `;
-    }
-
-    const monthRows = months.map(m => {
-      const c = m.counts || {};
-      return `
-        <tr>
-          <td>${m.label || "-"}</td>
-          <td>${c.TRAVEL ?? 0}</td>
-          <td>${c.SICK ?? 0}</td>
-          <td>${c.PERSONAL ?? 0}</td>
-          <td>${c.VACATION ?? 0}</td>
-        </tr>
-      `;
-    }).join("");
-
-    const html = `
-      <!doctype html>
-      <html lang="th">
-      <head>
-        <meta charset="utf-8">
-        <title>พิมพ์ผลสรุปสถิติ</title>
-        <style>
-          @page {
-            size: A4 portrait;
-            margin: 8mm;
-          }
-
-          * { box-sizing: border-box; }
-
-          html, body{
-            width: 210mm;
-            height: 297mm;
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
-            font-family: "TH Sarabun New", "Sarabun", Arial, sans-serif;
-            color: #1f2937;
-            background: #ffffff;
-          }
-
-          body{
-            padding: 5mm;
-            font-size: 12px;
-            line-height: 1.12;
-          }
-
-          .page{
-            width: 100%;
-            height: 100%;
-            border: 1px solid #dbe4f0;
-            border-radius: 10px;
-            overflow: hidden;
-            background:
-              linear-gradient(180deg, #f8fbff 0%, #ffffff 18%);
-          }
-
-          .header{
-            padding: 8px 12px 6px;
-            background: linear-gradient(135deg, #1d4ed8, #3b82f6);
-            color: #fff;
-          }
-
-          .title{
-            font-size: 22px;
-            font-weight: 700;
-            line-height: 1.05;
-            text-align: center;
-          }
-
-          .subtitle{
-            margin-top: 2px;
-            font-size: 12px;
-            text-align: center;
-            opacity: .96;
-          }
-
-          .content{
-            padding: 8px 10px 6px;
-          }
-
-          .info{
-            border: 1px solid #d9e5f4;
-            background: #f8fbff;
-            border-radius: 8px;
-            padding: 6px 8px;
-            margin-bottom: 8px;
-            font-size: 12px;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 4px 12px;
-          }
-
-          .info div b{
-            color: #1d4ed8;
-            font-weight: 700;
-          }
-
-          .summary-grid{
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 5px;
-            margin-bottom: 6px;
-          }
-
-          .box{
-            border-radius: 8px;
-            padding: 7px 8px 6px;
-            border: 1px solid #dbe4f0;
-            background: #ffffff;
-            min-height: 58px;
-          }
-
-          .box.blue   { background: #eff6ff; border-color: #bfdbfe; }
-          .box.green  { background: #ecfdf5; border-color: #bbf7d0; }
-          .box.amber  { background: #fffbeb; border-color: #fde68a; }
-          .box.pink   { background: #fff1f2; border-color: #fecdd3; }
-          .box.violet { background: #f5f3ff; border-color: #ddd6fe; }
-          .box.cyan   { background: #ecfeff; border-color: #a5f3fc; }
-
-          .label{
-            font-size: 11px;
-            color: #475569;
-            line-height: 1.05;
-          }
-
-          .value{
-            margin-top: 3px;
-            font-size: 22px;
-            font-weight: 700;
-            line-height: 1;
-            color: #0f172a;
-          }
-
-          .note{
-            margin-top: 1px;
-            font-size: 9.5px;
-            color: #64748b;
-            line-height: 1.05;
-          }
-
-          .period-grid{
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 5px;
-            margin-bottom: 6px;
-          }
-
-          .period{
-            border: 1px solid #dbe4f0;
-            border-radius: 8px;
-            overflow: hidden;
-            background: #ffffff;
-          }
-
-          .period-head{
-            padding: 6px 8px 5px;
-            background: linear-gradient(135deg, #eaf2ff, #f8fbff);
-            border-bottom: 1px solid #dbe4f0;
-          }
-
-          .period-title{
-            font-size: 14px;
-            font-weight: 700;
-            color: #1d4ed8;
-            line-height: 1.05;
-          }
-
-          .period-sub{
-            margin-top: 1px;
-            font-size: 10px;
-            color: #64748b;
-            line-height: 1.05;
-          }
-
-          .tbl{
-            width: 100%;
-            border-collapse: collapse;
-            table-layout: fixed;
-          }
-
-          .tbl th, .tbl td{
-            border-bottom: 1px solid #e5edf6;
-            padding: 4px 6px;
-            font-size: 11px;
-            line-height: 1.05;
-          }
-
-          .tbl th{
-            background: #f8fafc;
-            color: #334155;
-            font-weight: 700;
-            text-align: left;
-          }
-
-          .tbl th:last-child,
-          .tbl td:last-child{
-            text-align: center;
-            width: 58px;
-            font-weight: 700;
-          }
-
-          .remain-row td{
-            background: #f0fdf4;
-            color: #166534;
-            font-weight: 700;
-          }
-
-          .month-wrap{
-            margin-top: 4px;
-            border:1px solid #dbe4f0;
-            border-radius:8px;
-            overflow:hidden;
-            background:#fff;
-          }
-
-          .month-head{
-            padding:6px 8px;
-            background:linear-gradient(135deg, #eaf2ff, #f8fbff);
-            border-bottom:1px solid #dbe4f0;
-            font-size:14px;
-            font-weight:700;
-            color:#1d4ed8;
-          }
-
-          .month-table th, .month-table td{
-            font-size:10px;
-            padding:3px 5px;
-          }
-
-          .footer{
-            padding: 0 10px 8px;
-          }
-
-          .sign-grid{
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 18px;
-            margin-top: 2px;
-          }
-
-          .sign-box{
-            text-align: center;
-            font-size: 11px;
-            color: #374151;
-          }
-
-          .line{
-            margin: 18px auto 3px;
-            width: 140px;
-            border-top: 1px solid #475569;
-          }
-
-          .print-date{
-            margin-top: 6px;
-            text-align: right;
-            font-size: 9.5px;
-            color: #64748b;
-          }
-        </style>
-      </head>
-      <body>
-        <div class="page">
-          <div class="header">
-            <div class="title">รายงานสรุปสถิติการลาและการปฏิบัติงาน</div>
-            <div class="subtitle">ปีงบประมาณ 1 ตุลาคม 2568 - 30 กันยายน 2569</div>
-          </div>
-
-          <div class="content">
-            <div class="info">
-              <div><b>ชื่อบุคลากร:</b> ${staff.FullName || "-"}</div>
-              <div><b>รหัสบุคลากร:</b> ${staff.StaffID || "-"}</div>
-            </div>
-
-            <div class="summary-grid">
-              <div class="box blue">
-                <div class="label">วันลาพักผ่อนสะสม</div>
-                <div class="value">${vac.CarryPrev ?? 0}</div>
-              </div>
-
-              <div class="box green">
-                <div class="label">วันลาพักผ่อนประจำปี</div>
-                <div class="value">${vac.GrantedThisFY ?? 0}</div>
-              </div>
-
-              <div class="box amber">
-                <div class="label">วันพักผ่อนที่ลาได้สูงสุด</div>
-                <div class="value">${vac.AccumulateCap ?? 0}</div>
-              </div>
-
-              <div class="box violet">
-                <div class="label">วันลาพักผ่อนที่ลาได้ในปีงบประมาณนี้</div>
-                <div class="value">${vac.AllowedThisFY ?? 0}</div>
-                <div class="note">คำนวณอัตโนมัติจากสิทธิสะสมและประจำปี</div>
-              </div>
-
-              <div class="box pink">
-                <div class="label">ใช้ลาพักผ่อนแล้วทั้งปีงบประมาณ</div>
-                <div class="value">${vac.UsedFY ?? 0}</div>
-              </div>
-
-              <div class="box cyan">
-                <div class="label">วันลาพักผ่อนคงเหลือทั้งปีงบประมาณ</div>
-                <div class="value">${vac.RemainFY ?? 0}</div>
-              </div>
-            </div>
-
-            <div class="period-grid">
-              ${block("รอบที่ 1", periods.P1, vac.RemainP1)}
-              ${block("รอบที่ 2", periods.P2, vac.RemainP2)}
-              ${block("ปีงบประมาณ", periods.FY, vac.RemainFY)}
-            </div>
-
-            <div class="month-wrap">
-              <div class="month-head">สถิติการรายงานรายเดือน</div>
-              <table class="tbl month-table">
-                <thead>
-                  <tr>
-                    <th>เดือน</th>
-                    <th>ไปราชการ</th>
-                    <th>ลาป่วย</th>
-                    <th>ลากิจ</th>
-                    <th>ลาพักผ่อน</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${monthRows}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <div class="footer">
-            <div class="sign-grid">
-              <div class="sign-box">
-                <div class="line"></div>
-                <div>ผู้จัดทำรายงาน</div>
-              </div>
-              <div class="sign-box">
-                <div class="line"></div>
-                <div>ผู้ตรวจสอบ/ผู้บังคับบัญชา</div>
-              </div>
-            </div>
-
-            <div class="print-date">
-              พิมพ์เมื่อ: ${new Date().toLocaleString("th-TH")}
-            </div>
-          </div>
-        </div>
-
-        <script>
-          window.onload = function(){
-            window.print();
-            window.onafterprint = function(){ window.close(); };
-          };
-        <\/script>
-      </body>
-      </html>
-    `;
-
-    const w = window.open("", "_blank", "width=960,height=900");
-    if(!w){
-      showWarn("เบราว์เซอร์บล็อกหน้าต่างพิมพ์ กรุณาอนุญาต pop-up");
-      return;
-    }
-    w.document.open();
-    w.document.write(html);
-    w.document.close();
   }
 
   function renderStaffTable(){
@@ -1689,7 +1262,6 @@
   $("btnRefresh").onclick = ()=>calendar && calendar.refetchEvents();
   $("btnSave").onclick = saveEvent;
   $("btnCalcStatsAll").onclick = ()=>calcStatsAll();
-  $("btnPrintStats").onclick = ()=>printStatsReport();
   $("pStaffSel").addEventListener("change", ()=>loadPolicyToForm());
 
   (async ()=>{
