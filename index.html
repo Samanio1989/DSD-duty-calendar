@@ -977,7 +977,7 @@
     const vac = data.vacation || {};
     const periods = data.periods || {};
 
-    function block(label, d){
+    function block(label, d, remainValue){
       const c = (d && d.counts) ? d.counts : {};
       const r = (d && d.range) ? d.range : {};
       return `
@@ -1004,6 +1004,10 @@
             <div class="statCard">
               <b><span class="dot" style="background:var(--c-vac)"></span> ลาพักผ่อน</b>
               <div class="big">${c.VACATION ?? 0}</div>
+            </div>
+            <div class="statCard" style="grid-column:1 / -1">
+              <b><i class="fa-solid fa-hourglass-half"></i> วันลาพักผ่อนคงเหลือ</b>
+              <div class="big">${remainValue ?? 0}</div>
             </div>
           </div>
         </div>
@@ -1044,14 +1048,14 @@
         </div>
 
         <div class="statCard">
-          <b><i class="fa-solid fa-hourglass-half"></i> วันลาพักผ่อนคงเหลือ</b>
+          <b><i class="fa-solid fa-hourglass-half"></i> วันลาพักผ่อนคงเหลือทั้งปีงบประมาณ</b>
           <div class="big">${vac.RemainFY ?? 0}</div>
         </div>
       </div>
 
-      ${block("รอบที่ 1", periods.P1)}
-      ${block("รอบที่ 2", periods.P2)}
-      ${block("ปีงบประมาณ", periods.FY)}
+      ${block("รอบที่ 1", periods.P1, vac.RemainP1)}
+      ${block("รอบที่ 2", periods.P2, vac.RemainP2)}
+      ${block("ปีงบประมาณ", periods.FY, vac.RemainFY)}
     `;
   }
 
@@ -1094,7 +1098,7 @@
     const vac = data.vacation || {};
     const periods = data.periods || {};
 
-    function block(label, d){
+    function block(label, d, remainValue){
       const c = (d && d.counts) ? d.counts : {};
       const r = (d && d.range) ? d.range : {};
       return `
@@ -1116,6 +1120,7 @@
               <tr><td>ลาป่วย</td><td>${c.SICK ?? 0}</td></tr>
               <tr><td>ลากิจ</td><td>${c.PERSONAL ?? 0}</td></tr>
               <tr><td>ลาพักผ่อน</td><td>${c.VACATION ?? 0}</td></tr>
+              <tr><td><b>วันลาพักผ่อนคงเหลือ</b></td><td><b>${remainValue ?? 0}</b></td></tr>
             </tbody>
           </table>
         </div>
@@ -1257,14 +1262,14 @@
             <div class="value">${vac.UsedFY ?? 0}</div>
           </div>
           <div class="box">
-            <div class="label">วันลาพักผ่อนคงเหลือ</div>
+            <div class="label">วันลาพักผ่อนคงเหลือทั้งปีงบประมาณ</div>
             <div class="value">${vac.RemainFY ?? 0}</div>
           </div>
         </div>
 
-        ${block("รอบที่ 1", periods.P1)}
-        ${block("รอบที่ 2", periods.P2)}
-        ${block("ปีงบประมาณ", periods.FY)}
+        ${block("รอบที่ 1", periods.P1, vac.RemainP1)}
+        ${block("รอบที่ 2", periods.P2, vac.RemainP2)}
+        ${block("ปีงบประมาณ", periods.FY, vac.RemainFY)}
 
         <div class="sign">
           <div class="sign-box">
