@@ -1087,224 +1087,361 @@
     }
   }
 
-  function printStatsReport(){
-    if(!LAST_STATS_DATA){
-      showWarn("กรุณาคำนวณสถิติก่อนพิมพ์");
-      return;
-    }
+function printStatsReport(){
+  if(!LAST_STATS_DATA){
+    showWarn("กรุณาคำนวณสถิติก่อนพิมพ์");
+    return;
+  }
 
-    const data = LAST_STATS_DATA;
-    const staff = data.staff || {};
-    const vac = data.vacation || {};
-    const periods = data.periods || {};
+  const data = LAST_STATS_DATA;
+  const staff = data.staff || {};
+  const vac = data.vacation || {};
+  const periods = data.periods || {};
 
-    function block(label, d, remainValue){
-      const c = (d && d.counts) ? d.counts : {};
-      const r = (d && d.range) ? d.range : {};
-      return `
-        <div class="period">
+  function block(label, d, remainValue){
+    const c = (d && d.counts) ? d.counts : {};
+    const r = (d && d.range) ? d.range : {};
+    return `
+      <div class="period">
+        <div class="period-head">
           <div class="period-title">${label}</div>
           <div class="period-sub">
-            ช่วงวันที่ ${formatThaiDate(r.start)} - ${formatThaiDate(r.end)}
-            | วันทำการ ${r.workdays ?? 0} วัน
-          </div>
-          <table class="tbl">
-            <thead>
-              <tr>
-                <th>ประเภท</th>
-                <th>จำนวนวัน</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr><td>ไปราชการ</td><td>${c.TRAVEL ?? 0}</td></tr>
-              <tr><td>ลาป่วย</td><td>${c.SICK ?? 0}</td></tr>
-              <tr><td>ลากิจ</td><td>${c.PERSONAL ?? 0}</td></tr>
-              <tr><td>ลาพักผ่อน</td><td>${c.VACATION ?? 0}</td></tr>
-              <tr><td><b>วันลาพักผ่อนคงเหลือ</b></td><td><b>${remainValue ?? 0}</b></td></tr>
-            </tbody>
-          </table>
-        </div>
-      `;
-    }
-
-    const html = `
-      <!doctype html>
-      <html lang="th">
-      <head>
-        <meta charset="utf-8">
-        <title>พิมพ์ผลสรุปสถิติ</title>
-        <style>
-          @page { size: A4; margin: 16mm; }
-          body{
-            font-family: "TH Sarabun New", "Sarabun", Arial, sans-serif;
-            color:#111827;
-            font-size:16px;
-            line-height:1.45;
-          }
-          .title{
-            text-align:center;
-            font-size:24px;
-            font-weight:700;
-            margin-bottom:4px;
-          }
-          .subtitle{
-            text-align:center;
-            font-size:16px;
-            margin-bottom:18px;
-            color:#374151;
-          }
-          .info{
-            margin-bottom:14px;
-            padding:10px 12px;
-            border:1px solid #d1d5db;
-            border-radius:8px;
-            background:#f9fafb;
-          }
-          .grid{
-            display:grid;
-            grid-template-columns:1fr 1fr;
-            gap:10px;
-            margin-bottom:16px;
-          }
-          .box{
-            border:1px solid #d1d5db;
-            border-radius:8px;
-            padding:10px 12px;
-          }
-          .box .label{
-            font-size:14px;
-            color:#6b7280;
-          }
-          .box .value{
-            font-size:24px;
-            font-weight:700;
-            margin-top:4px;
-          }
-          .period{
-            margin-top:14px;
-            border:1px solid #d1d5db;
-            border-radius:8px;
-            padding:12px;
-            page-break-inside:avoid;
-          }
-          .period-title{
-            font-size:18px;
-            font-weight:700;
-            margin-bottom:4px;
-          }
-          .period-sub{
-            font-size:14px;
-            color:#4b5563;
-            margin-bottom:8px;
-          }
-          .tbl{
-            width:100%;
-            border-collapse:collapse;
-          }
-          .tbl th, .tbl td{
-            border:1px solid #d1d5db;
-            padding:8px 10px;
-            text-align:left;
-          }
-          .tbl th{
-            background:#f3f4f6;
-          }
-          .sign{
-            margin-top:36px;
-            display:grid;
-            grid-template-columns:1fr 1fr;
-            gap:24px;
-          }
-          .sign-box{
-            text-align:center;
-            margin-top:36px;
-          }
-          .line{
-            margin:28px auto 6px;
-            width:220px;
-            border-top:1px solid #111827;
-          }
-          .print-date{
-            margin-top:16px;
-            font-size:14px;
-            color:#4b5563;
-          }
-        </style>
-      </head>
-      <body>
-        <div class="title">รายงานสรุปสถิติการลาและการปฏิบัติงาน</div>
-        <div class="subtitle">ปีงบประมาณ 1 ตุลาคม 2568 - 30 กันยายน 2569</div>
-
-        <div class="info">
-          <b>ชื่อบุคลากร:</b> ${staff.FullName || "-"}<br>
-          <b>รหัสบุคลากร:</b> ${staff.StaffID || "-"}
-        </div>
-
-        <div class="grid">
-          <div class="box">
-            <div class="label">วันลาพักผ่อนสะสม</div>
-            <div class="value">${vac.CarryPrev ?? 0}</div>
-          </div>
-          <div class="box">
-            <div class="label">วันลาพักผ่อนประจำปี</div>
-            <div class="value">${vac.GrantedThisFY ?? 0}</div>
-          </div>
-          <div class="box">
-            <div class="label">วันพักผ่อนที่ลาได้สูงสุด</div>
-            <div class="value">${vac.AccumulateCap ?? 0}</div>
-          </div>
-          <div class="box">
-            <div class="label">วันลาพักผ่อนที่ลาได้ในปีงบประมาณนี้</div>
-            <div class="value">${vac.AllowedThisFY ?? 0}</div>
-          </div>
-          <div class="box">
-            <div class="label">ใช้ลาพักผ่อนแล้วทั้งปีงบประมาณ</div>
-            <div class="value">${vac.UsedFY ?? 0}</div>
-          </div>
-          <div class="box">
-            <div class="label">วันลาพักผ่อนคงเหลือทั้งปีงบประมาณ</div>
-            <div class="value">${vac.RemainFY ?? 0}</div>
+            ${formatThaiDate(r.start)} - ${formatThaiDate(r.end)}
           </div>
         </div>
 
-        ${block("รอบที่ 1", periods.P1, vac.RemainP1)}
-        ${block("รอบที่ 2", periods.P2, vac.RemainP2)}
-        ${block("ปีงบประมาณ", periods.FY, vac.RemainFY)}
-
-        <div class="sign">
-          <div class="sign-box">
-            <div class="line"></div>
-            <div>ผู้จัดทำรายงาน</div>
-          </div>
-          <div class="sign-box">
-            <div class="line"></div>
-            <div>ผู้ตรวจสอบ/ผู้บังคับบัญชา</div>
-          </div>
-        </div>
-
-        <div class="print-date">
-          พิมพ์เมื่อ: ${new Date().toLocaleString("th-TH")}
-        </div>
-
-        <script>
-          window.onload = function(){
-            window.print();
-            window.onafterprint = function(){ window.close(); };
-          };
-        <\/script>
-      </body>
-      </html>
+        <table class="tbl">
+          <thead>
+            <tr>
+              <th>รายการ</th>
+              <th>จำนวนวัน</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>ไปราชการ</td><td>${c.TRAVEL ?? 0}</td></tr>
+            <tr><td>ลาป่วย</td><td>${c.SICK ?? 0}</td></tr>
+            <tr><td>ลากิจ</td><td>${c.PERSONAL ?? 0}</td></tr>
+            <tr><td>ลาพักผ่อน</td><td>${c.VACATION ?? 0}</td></tr>
+            <tr class="remain-row"><td>วันลาพักผ่อนคงเหลือ</td><td>${remainValue ?? 0}</td></tr>
+          </tbody>
+        </table>
+      </div>
     `;
-
-    const w = window.open("", "_blank", "width=960,height=900");
-    if(!w){
-      showWarn("เบราว์เซอร์บล็อกหน้าต่างพิมพ์ กรุณาอนุญาต pop-up");
-      return;
-    }
-    w.document.open();
-    w.document.write(html);
-    w.document.close();
   }
+
+  const html = `
+    <!doctype html>
+    <html lang="th">
+    <head>
+      <meta charset="utf-8">
+      <title>พิมพ์ผลสรุปสถิติ</title>
+      <style>
+        @page {
+          size: A4 portrait;
+          margin: 8mm;
+        }
+
+        * { box-sizing: border-box; }
+
+        html, body{
+          width: 210mm;
+          height: 297mm;
+          margin: 0;
+          padding: 0;
+          overflow: hidden;
+          font-family: "TH Sarabun New", "Sarabun", Arial, sans-serif;
+          color: #1f2937;
+          background: #ffffff;
+        }
+
+        body{
+          padding: 6mm;
+          font-size: 13px;
+          line-height: 1.18;
+        }
+
+        .page{
+          width: 100%;
+          height: 100%;
+          border: 1px solid #dbe4f0;
+          border-radius: 10px;
+          overflow: hidden;
+          background:
+            linear-gradient(180deg, #f8fbff 0%, #ffffff 18%);
+        }
+
+        .header{
+          padding: 8px 12px 6px;
+          background: linear-gradient(135deg, #1d4ed8, #3b82f6);
+          color: #fff;
+        }
+
+        .title{
+          font-size: 22px;
+          font-weight: 700;
+          line-height: 1.05;
+          text-align: center;
+        }
+
+        .subtitle{
+          margin-top: 2px;
+          font-size: 12px;
+          text-align: center;
+          opacity: .96;
+        }
+
+        .content{
+          padding: 8px 10px 6px;
+        }
+
+        .info{
+          border: 1px solid #d9e5f4;
+          background: #f8fbff;
+          border-radius: 8px;
+          padding: 6px 8px;
+          margin-bottom: 8px;
+          font-size: 12px;
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 4px 12px;
+        }
+
+        .info div b{
+          color: #1d4ed8;
+          font-weight: 700;
+        }
+
+        .summary-grid{
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 6px;
+          margin-bottom: 8px;
+        }
+
+        .box{
+          border-radius: 8px;
+          padding: 7px 8px 6px;
+          border: 1px solid #dbe4f0;
+          background: #ffffff;
+          min-height: 58px;
+        }
+
+        .box.blue   { background: #eff6ff; border-color: #bfdbfe; }
+        .box.green  { background: #ecfdf5; border-color: #bbf7d0; }
+        .box.amber  { background: #fffbeb; border-color: #fde68a; }
+        .box.pink   { background: #fff1f2; border-color: #fecdd3; }
+        .box.violet { background: #f5f3ff; border-color: #ddd6fe; }
+        .box.cyan   { background: #ecfeff; border-color: #a5f3fc; }
+
+        .label{
+          font-size: 11px;
+          color: #475569;
+          line-height: 1.05;
+        }
+
+        .value{
+          margin-top: 3px;
+          font-size: 22px;
+          font-weight: 700;
+          line-height: 1;
+          color: #0f172a;
+        }
+
+        .note{
+          margin-top: 1px;
+          font-size: 9.5px;
+          color: #64748b;
+          line-height: 1.05;
+        }
+
+        .period-grid{
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 6px;
+          margin-bottom: 8px;
+        }
+
+        .period{
+          border: 1px solid #dbe4f0;
+          border-radius: 8px;
+          overflow: hidden;
+          background: #ffffff;
+        }
+
+        .period-head{
+          padding: 6px 8px 5px;
+          background: linear-gradient(135deg, #eaf2ff, #f8fbff);
+          border-bottom: 1px solid #dbe4f0;
+        }
+
+        .period-title{
+          font-size: 14px;
+          font-weight: 700;
+          color: #1d4ed8;
+          line-height: 1.05;
+        }
+
+        .period-sub{
+          margin-top: 1px;
+          font-size: 10px;
+          color: #64748b;
+          line-height: 1.05;
+        }
+
+        .tbl{
+          width: 100%;
+          border-collapse: collapse;
+          table-layout: fixed;
+        }
+
+        .tbl th, .tbl td{
+          border-bottom: 1px solid #e5edf6;
+          padding: 4px 6px;
+          font-size: 11px;
+          line-height: 1.05;
+        }
+
+        .tbl th{
+          background: #f8fafc;
+          color: #334155;
+          font-weight: 700;
+          text-align: left;
+        }
+
+        .tbl th:last-child,
+        .tbl td:last-child{
+          text-align: center;
+          width: 58px;
+          font-weight: 700;
+        }
+
+        .remain-row td{
+          background: #f0fdf4;
+          color: #166534;
+          font-weight: 700;
+        }
+
+        .footer{
+          padding: 0 10px 8px;
+        }
+
+        .sign-grid{
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 18px;
+          margin-top: 2px;
+        }
+
+        .sign-box{
+          text-align: center;
+          font-size: 11px;
+          color: #374151;
+        }
+
+        .line{
+          margin: 18px auto 3px;
+          width: 140px;
+          border-top: 1px solid #475569;
+        }
+
+        .print-date{
+          margin-top: 6px;
+          text-align: right;
+          font-size: 9.5px;
+          color: #64748b;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="page">
+        <div class="header">
+          <div class="title">รายงานสรุปสถิติการลาและการปฏิบัติงาน</div>
+          <div class="subtitle">ปีงบประมาณ 1 ตุลาคม 2568 - 30 กันยายน 2569</div>
+        </div>
+
+        <div class="content">
+          <div class="info">
+            <div><b>ชื่อบุคลากร:</b> ${staff.FullName || "-"}</div>
+            <div><b>รหัสบุคลากร:</b> ${staff.StaffID || "-"}</div>
+          </div>
+
+          <div class="summary-grid">
+            <div class="box blue">
+              <div class="label">วันลาพักผ่อนสะสม</div>
+              <div class="value">${vac.CarryPrev ?? 0}</div>
+            </div>
+
+            <div class="box green">
+              <div class="label">วันลาพักผ่อนประจำปี</div>
+              <div class="value">${vac.GrantedThisFY ?? 0}</div>
+            </div>
+
+            <div class="box amber">
+              <div class="label">วันพักผ่อนที่ลาได้สูงสุด</div>
+              <div class="value">${vac.AccumulateCap ?? 0}</div>
+            </div>
+
+            <div class="box violet">
+              <div class="label">วันลาพักผ่อนที่ลาได้ในปีงบประมาณนี้</div>
+              <div class="value">${vac.AllowedThisFY ?? 0}</div>
+              <div class="note">คำนวณอัตโนมัติจากสิทธิสะสมและประจำปี</div>
+            </div>
+
+            <div class="box pink">
+              <div class="label">ใช้ลาพักผ่อนแล้วทั้งปีงบประมาณ</div>
+              <div class="value">${vac.UsedFY ?? 0}</div>
+            </div>
+
+            <div class="box cyan">
+              <div class="label">วันลาพักผ่อนคงเหลือทั้งปีงบประมาณ</div>
+              <div class="value">${vac.RemainFY ?? 0}</div>
+            </div>
+          </div>
+
+          <div class="period-grid">
+            ${block("รอบที่ 1", periods.P1, vac.RemainP1)}
+            ${block("รอบที่ 2", periods.P2, vac.RemainP2)}
+            ${block("ปีงบประมาณ", periods.FY, vac.RemainFY)}
+          </div>
+        </div>
+
+        <div class="footer">
+          <div class="sign-grid">
+            <div class="sign-box">
+              <div class="line"></div>
+              <div>ผู้จัดทำรายงาน</div>
+            </div>
+            <div class="sign-box">
+              <div class="line"></div>
+              <div>ผู้ตรวจสอบ/ผู้บังคับบัญชา</div>
+            </div>
+          </div>
+
+          <div class="print-date">
+            พิมพ์เมื่อ: ${new Date().toLocaleString("th-TH")}
+          </div>
+        </div>
+      </div>
+
+      <script>
+        window.onload = function(){
+          window.print();
+          window.onafterprint = function(){ window.close(); };
+        };
+      <\/script>
+    </body>
+    </html>
+  `;
+
+  const w = window.open("", "_blank", "width=960,height=900");
+  if(!w){
+    showWarn("เบราว์เซอร์บล็อกหน้าต่างพิมพ์ กรุณาอนุญาต pop-up");
+    return;
+  }
+  w.document.open();
+  w.document.write(html);
+  w.document.close();
+}
 
   function renderStaffTable(){
     const tb = $("staffTbody");
