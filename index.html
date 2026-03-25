@@ -269,12 +269,12 @@
   <div class="wrap">
     <div class="top">
       <div class="brand">
-        <div class="logo"><i class="fa-solid fa-bug"></i></div>
+        <div class="logo" style="background:#fff;padding:2px"><img src="https://drive.google.com/uc?export=view&id=1Uw3Exsov9d_TX62i6EmAA8_tbDkOmUtr" alt="ARU" style="width:100%;height:100%;object-fit:contain;border-radius:14px"></div>
         <div>
-          <h1>ปฏิทินวันลาและการปฏิบัติงาน (Debug)</h1>
+          <h1>ระบบสรุปการลา การปฏิบัติงาน และเช็คชื่อบุคลากร</h1>
           <div class="sub">
             <span class="chip"><i class="fa-solid fa-clock"></i> ปีงบประมาณ 1 ต.ค. 2568 - 30 ก.ย. 2569</span>
-            <span class="chip"><i class="fa-solid fa-code"></i> เวอร์ชันตรวจสอบ months/debug API</span>
+            <span class="chip"><i class="fa-solid fa-building-columns"></i> เวอร์ชันรายงานผู้บริหาร + ระบบเช็คชื่อ</span>
           </div>
         </div>
       </div>
@@ -378,8 +378,8 @@
       <div class="grid" style="grid-template-columns:1.05fr .95fr">
         <div class="card">
           <div class="card-h">
-            <div class="t"><i class="fa-solid fa-chart-column"></i> สถิติการทำงาน (Debug)</div>
-            <div class="hint">ตรวจ months / API response</div>
+            <div class="t"><i class="fa-solid fa-chart-column"></i> สถิติการลาและการปฏิบัติงาน</div>
+            <div class="hint">สรุปตามรอบ รายเดือน และเช็คชื่อรอบที่ 2</div>
           </div>
           <div class="card-b">
             <div class="row">
@@ -526,6 +526,70 @@
               <button class="btn" onclick="loadPolicyToForm()"><i class="fa-solid fa-arrow-down"></i> ดึงค่าปัจจุบัน</button>
             </div>
           </div>
+
+      </div>
+
+      <div class="card" style="margin-top:14px">
+        <div class="card-h">
+          <div class="t"><i class="fa-solid fa-user-check"></i> เช็คชื่อรายวันบุคลากร</div>
+          <div class="right">
+            <button class="btn" onclick="loadDailyCheckAdmin()"><i class="fa-solid fa-rotate"></i> โหลดรายการเช็คชื่อ</button>
+          </div>
+        </div>
+        <div class="card-b">
+          <div class="row">
+            <div>
+              <div class="hint">บุคลากร</div>
+              <select id="chkStaff"></select>
+            </div>
+            <div>
+              <div class="hint">สถานะ</div>
+              <select id="chkStatus">
+                <option value="PRESENT" selected>มาปฏิบัติงาน</option>
+                <option value="WFH">ปฏิบัติงานนอกสถานที่</option>
+                <option value="ABSENT">ขาดงาน</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="row" style="margin-top:10px">
+            <div>
+              <div class="hint">วันที่เริ่ม</div>
+              <input id="chkDate" type="date">
+            </div>
+            <div>
+              <div class="hint">ถึงวันที่ (เว้นว่าง = วันเดียว)</div>
+              <input id="chkDateEnd" type="date">
+            </div>
+          </div>
+
+          <div style="margin-top:10px">
+            <div class="hint">หมายเหตุ</div>
+            <input id="chkNote" placeholder="เช่น ลงเวลาแล้ว / ออกพื้นที่ / ปฏิบัติงานภาคสนาม">
+          </div>
+
+          <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn good" onclick="saveDailyCheck()"><i class="fa-solid fa-floppy-disk"></i> บันทึกเช็คชื่อ</button>
+            <button class="btn" onclick="fillTodayCheck()"><i class="fa-solid fa-calendar-day"></i> วันนี้</button>
+          </div>
+
+          <div style="margin-top:12px;overflow:auto;border:1px solid rgba(226,232,240,.9);border-radius:16px">
+            <table>
+              <thead>
+                <tr>
+                  <th>วันที่</th>
+                  <th>รหัส</th>
+                  <th>ชื่อ-สกุล</th>
+                  <th>สถานะ</th>
+                  <th>หมายเหตุ</th>
+                  <th>อัปเดตล่าสุด</th>
+                </tr>
+              </thead>
+              <tbody id="dailyCheckTbody">
+                <tr><td colspan="6" style="color:#64748b">ยังไม่มีข้อมูล</td></tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
@@ -630,6 +694,7 @@
   let STAFF = [];
   let POLICY = {};
   let LAST_STATS_DATA = null;
+  const REPORT_LOGO = "https://drive.google.com/uc?export=view&id=1Uw3Exsov9d_TX62i6EmAA8_tbDkOmUtr";
 
   function setLoading(on, text){
     const el = $("loading");
@@ -729,6 +794,7 @@
       secAdmin.classList.add("active");
       tabAdmin.classList.add("active");
       reloadStaffAndPolicy(true);
+      loadDailyCheckAdmin();
     }
   }
 
@@ -754,12 +820,15 @@
 
       $("staffSel").innerHTML = STAFF.map(s=>`<option value="${s.StaffID}">${s.FullName}</option>`).join("");
       $("pStaffSel").innerHTML = STAFF.map(s=>`<option value="${s.StaffID}">${s.FullName}</option>`).join("");
+      if($("chkStaff")) $("chkStaff").innerHTML = STAFF.map(s=>`<option value="${s.StaffID}">${s.FullName}</option>`).join("");
 
       const d = new Date();
       const pad = (n)=>String(n).padStart(2,'0');
       const ymd = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
       $("startDate").value = ymd;
       $("endDate").value = ymd;
+      if($("chkDate")) $("chkDate").value = ymd;
+      if($("chkDateEnd")) $("chkDateEnd").value = ymd;
 
       bindStatsStaffDropdown();
       renderStaffTable();
@@ -970,6 +1039,71 @@
     `;
   }
 
+
+  function attendanceBadge(statusKey, statusLabel){
+    const map = {
+      PRESENT: "#16a34a",
+      WFH: "#0891b2",
+      ABSENT: "#dc2626",
+      TRAVEL: "var(--c-travel)",
+      SICK: "var(--c-sick)",
+      PERSONAL: "var(--c-personal)",
+      VACATION: "var(--c-vac)"
+    };
+    const c = map[statusKey] || "#64748b";
+    return `<span class="badge" style="border-color:${c}33;background:${c}12;color:${c}">${escapeHtml(statusLabel || statusKey || "-")}</span>`;
+  }
+
+  function fillTodayCheck(){
+    const d = new Date();
+    const pad = (n)=>String(n).padStart(2,'0');
+    const ymd = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+    if($("chkDate")) $("chkDate").value = ymd;
+    if($("chkDateEnd")) $("chkDateEnd").value = ymd;
+  }
+
+  async function saveDailyCheck(){
+    const StaffID = $("chkStaff").value;
+    const Date = $("chkDate").value;
+    const endDate = $("chkDateEnd").value || Date;
+    const Status = $("chkStatus").value;
+    const Note = $("chkNote").value.trim();
+    if(!StaffID || !Date) return aWarn("กรุณาเลือกบุคลากรและวันที่");
+    setLoading(true, "กำลังบันทึกเช็คชื่อ...");
+    try{
+      const res = await jsonp({ act:"upsertDailyCheck", StaffID, Date, endDate, Status, Note });
+      if(!res.ok) return aWarn(res.message || "บันทึกเช็คชื่อไม่สำเร็จ");
+      aOk("บันทึกเช็คชื่อเรียบร้อย");
+      loadDailyCheckAdmin();
+    }catch(err){
+      aWarn(err?.message || "บันทึกเช็คชื่อไม่สำเร็จ");
+    }finally{
+      setLoading(false);
+    }
+  }
+
+  async function loadDailyCheckAdmin(){
+    if(!$("dailyCheckTbody")) return;
+    const staffId = $("chkStaff") ? $("chkStaff").value : "";
+    const start = $("chkDate") ? $("chkDate").value : "";
+    const end = $("chkDateEnd") ? $("chkDateEnd").value : "";
+    try{
+      const res = await jsonp({ act:"listDailyCheck", StaffID: staffId, start, end });
+      if(!res.ok) return;
+      const rows = (res.data && res.data.rows) ? res.data.rows : [];
+      const staffMap = Object.fromEntries((STAFF||[]).map(s=>[s.StaffID, s.FullName]));
+      $("dailyCheckTbody").innerHTML = rows.length ? rows.map(r=>`
+        <tr>
+          <td>${escapeHtml(r.Date)}</td>
+          <td>${escapeHtml(r.StaffID)}</td>
+          <td>${escapeHtml(staffMap[r.StaffID] || "-")}</td>
+          <td>${attendanceBadge(r.Status, r.Status === "PRESENT" ? "มาปฏิบัติงาน" : (r.Status === "WFH" ? "ปฏิบัติงานนอกสถานที่" : "ขาดงาน"))}</td>
+          <td>${escapeHtml(r.Note || "-")}</td>
+          <td>${escapeHtml(r.UpdatedAt || "-")}</td>
+        </tr>`).join("") : `<tr><td colspan="6" style="color:#64748b">ยังไม่มีข้อมูล</td></tr>`;
+    }catch(err){}
+  }
+
   function renderStatsAllPeriods(data){
     LAST_STATS_DATA = data;
     const staff = data.staff || {};
@@ -1008,6 +1142,18 @@
         <td>${n(m.counts && m.counts.SICK)}</td>
         <td>${n(m.counts && m.counts.PERSONAL)}</td>
         <td>${n(m.counts && m.counts.VACATION)}</td>
+      </tr>
+    `).join("");
+
+    const p2Daily = (periods.P2 && Array.isArray(periods.P2.daily)) ? periods.P2.daily : [];
+    const p2DailySummary = (periods.P2 && periods.P2.dailySummary) ? periods.P2.dailySummary : {};
+    const p2DailyRows = p2Daily.map((d, idx) => `
+      <tr>
+        <td>${idx + 1}</td>
+        <td>${formatThaiDate(d.date)}</td>
+        <td>${attendanceBadge(d.statusKey, d.statusLabel)}</td>
+        <td>${escapeHtml(d.source || "-")}</td>
+        <td>${escapeHtml(d.note || "-")}</td>
       </tr>
     `).join("");
 
@@ -1099,6 +1245,34 @@
       ${block("ปีงบประมาณ", periods.FY, vac.RemainFY)}
 
       <div class="statCard" style="margin-top:12px">
+        <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap">
+          <div>
+            <b><i class="fa-solid fa-user-check"></i> เช็คชื่อรายวันรอบที่ 2</b>
+            <div class="smallmuted">หากมีการลาหรือไปราชการล่วงหน้า ระบบจะแสดงสถานะจากปฏิทินก่อน หากไม่มีการเช็คชื่อและไม่มีรายการลา ระบบจะนับเป็นขาดงาน</div>
+          </div>
+          <div class="badge">
+            มา ${n(p2DailySummary.PRESENT)} • นอกสถานที่ ${n(p2DailySummary.WFH)} • ขาด ${n(p2DailySummary.ABSENT)}
+          </div>
+        </div>
+        <div style="margin-top:10px;overflow:auto;border:1px solid rgba(226,232,240,.9);border-radius:16px">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:60px">ลำดับ</th>
+                <th style="width:120px">วันที่</th>
+                <th style="width:180px">สถานะ</th>
+                <th style="width:90px">แหล่งข้อมูล</th>
+                <th>หมายเหตุ</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${p2DailyRows || '<tr><td colspan="5" style="color:#64748b">ไม่มีข้อมูล</td></tr>'}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="statCard" style="margin-top:12px">
         <b><i class="fa-solid fa-chart-line"></i> สถิติการรายงานรายเดือน</b>
         <div class="smallmuted">พบ months = ${months.length} รายการ</div>
         <div style="margin-top:10px;overflow:auto;border:1px solid rgba(226,232,240,.9);border-radius:16px">
@@ -1129,6 +1303,8 @@
       *{box-sizing:border-box}
       body{font-family:"TH Sarabun New","Sarabun","Kanit",Arial,sans-serif;color:#0f172a;margin:0;font-size:14px;line-height:1.45}
       .page{min-height:27.7cm; page-break-after:always; position:relative}
+      .logoRow{text-align:center;margin-bottom:8px}
+      .logoRow img{height:72px;object-fit:contain}
       .page:last-child{page-break-after:auto}
       .report-shell{padding:0}
       .head{border-bottom:3px solid #1d4ed8;padding-bottom:10px;margin-bottom:14px}
@@ -1169,6 +1345,7 @@
     const months = Array.isArray(data.months) ? data.months : [];
     const n = (v)=>Number(v || 0);
     const nowTh = new Date().toLocaleString("th-TH", { dateStyle:"full", timeStyle:"short" });
+    const p2Daily = (periods.P2 && Array.isArray(periods.P2.daily)) ? periods.P2.daily : [];
 
     const periodCard = (title, stat, remain)=>{
       const c = (stat && stat.counts) ? stat.counts : {};
@@ -1198,50 +1375,52 @@
       </tr>
     `).join("");
 
-    const detailPages = months.map((m, pageIdx) => {
-      const details = Array.isArray(m.details) ? m.details : [];
-      const rows = details.map((d, idx) => `
-        <tr>
-          <td class="num">${idx + 1}</td>
-          <td>${escapeHtml(d.typeLabel || d.typeKey || "-")}</td>
-          <td class="num">${formatThaiDate(d.startDate)}</td>
-          <td class="num">${formatThaiDate(d.endDate)}</td>
-          <td>${escapeHtml((d.dates || []).join(", "))}</td>
-          <td class="num">${n(d.days)}</td>
-        </tr>
-      `).join("");
-      const totalDays = details.reduce((sum, d) => sum + n(d.days), 0);
-      return `
-        <section class="page report-shell">
-          <div class="head">
-            <h1>รายงานรายละเอียดรายเดือน</h1>
-            <h2>${escapeHtml(m.label || "-")}</h2>
-            <div class="subhead">บุคลากร: ${escapeHtml(staff.FullName || "-")} (${escapeHtml(staff.StaffID || "-")})</div>
-          </div>
-          <div class="month-block">
-            <div class="month-head">
-              <div class="title">สรุปรายการลาและการปฏิบัติงานประจำเดือน</div>
-              <div class="pill">${details.length} รายการ • รวม ${totalDays} วัน</div>
-            </div>
-            ${details.length ? `
-              <table>
-                <thead>
-                  <tr>
-                    <th style="width:46px">ลำดับ</th>
-                    <th style="width:120px">ประเภท</th>
-                    <th style="width:90px">เริ่ม</th>
-                    <th style="width:90px">สิ้นสุด</th>
-                    <th>วันที่ที่นับจริง</th>
-                    <th style="width:70px">รวม</th>
-                  </tr>
-                </thead>
-                <tbody>${rows}</tbody>
-              </table>
-            ` : `<div class="empty">ไม่มีรายการในเดือนนี้</div>`}
-          </div>
-        </section>
-      `;
-    }).join("");
+    const detailPages = `
+      <section class="page report-shell">
+        <div class="head">
+          <div class="logoRow"><img src="${REPORT_LOGO}" alt="ARU"></div>
+          <h1>รายละเอียดรายเดือน</h1>
+          <h2>เรียงต่อเนื่องตลอดปีงบประมาณ</h2>
+          <div class="subhead">บุคลากร: ${escapeHtml(staff.FullName || "-")} (${escapeHtml(staff.StaffID || "-")})</div>
+        </div>
+        ${months.map((m) => {
+          const details = Array.isArray(m.details) ? m.details : [];
+          const rows = details.map((d, idx) => `
+            <tr>
+              <td class="num">${idx + 1}</td>
+              <td>${escapeHtml(d.typeLabel || d.typeKey || "-")}</td>
+              <td class="num">${formatThaiDate(d.startDate)}</td>
+              <td class="num">${formatThaiDate(d.endDate)}</td>
+              <td>${escapeHtml((d.dates || []).join(", "))}</td>
+              <td class="num">${n(d.days)}</td>
+            </tr>
+          `).join("");
+          const totalDays = details.reduce((sum, d) => sum + n(d.days), 0);
+          return `
+            <div class="month-block">
+              <div class="month-head">
+                <div class="title">${escapeHtml(m.label || "-")}</div>
+                <div class="pill">${details.length} รายการ • รวม ${totalDays} วัน</div>
+              </div>
+              ${details.length ? `
+                <table>
+                  <thead>
+                    <tr>
+                      <th style="width:46px">ลำดับ</th>
+                      <th style="width:120px">ประเภท</th>
+                      <th style="width:90px">เริ่ม</th>
+                      <th style="width:90px">สิ้นสุด</th>
+                      <th>วันที่ที่นับจริง</th>
+                      <th style="width:70px">รวม</th>
+                    </tr>
+                  </thead>
+                  <tbody>${rows}</tbody>
+                </table>
+              ` : `<div class="empty">ไม่มีรายการในเดือนนี้</div>`}
+            </div>`;
+        }).join("")}
+      </section>
+    `;
 
     return `
       <!doctype html>
@@ -1254,6 +1433,7 @@
       <body>
         <section class="page report-shell">
           <div class="head">
+            <div class="logoRow"><img src="${REPORT_LOGO}" alt="ARU"></div>
             <h1>รายงานสรุปสถิติการลาและการปฏิบัติงาน</h1>
             <h2>มหาวิทยาลัยราชภัฏพระนครศรีอยุธยา</h2>
             <div class="subhead">สำหรับเสนอผู้บริหาร • พิมพ์เมื่อ ${escapeHtml(nowTh)}</div>
@@ -1284,6 +1464,28 @@
             ${periodCard("รอบที่ 2", periods.P2, vac.RemainP2)}
             ${periodCard("ปีงบประมาณ", periods.FY, vac.RemainFY)}
           </div>
+
+          <div class="section-title">สรุปเช็คชื่อรอบที่ 2</div>
+          <table>
+            <thead>
+              <tr>
+                <th>วันที่</th>
+                <th>สถานะ</th>
+                <th>แหล่งข้อมูล</th>
+                <th>หมายเหตุ</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${p2Daily.length ? p2Daily.map(r => `
+                <tr>
+                  <td class="num">${formatThaiDate(r.date)}</td>
+                  <td>${escapeHtml(r.statusLabel || "-")}</td>
+                  <td class="num">${escapeHtml(r.source || "-")}</td>
+                  <td>${escapeHtml(r.note || "-")}</td>
+                </tr>
+              `).join("") : '<tr><td colspan="4" class="num">ไม่มีข้อมูล</td></tr>'}
+            </tbody>
+          </table>
 
           <div class="section-title">สรุปรายเดือน</div>
           <table>
@@ -1514,8 +1716,10 @@
 
       $("staffSel").innerHTML = STAFF.map(s=>`<option value="${s.StaffID}">${s.FullName}</option>`).join("");
       $("pStaffSel").innerHTML = STAFF.map(s=>`<option value="${s.StaffID}">${s.FullName}</option>`).join("");
+      if($("chkStaff")) $("chkStaff").innerHTML = STAFF.map(s=>`<option value="${s.StaffID}">${s.FullName}</option>`).join("");
       bindStatsStaffDropdown();
       renderStaffTable();
+      loadDailyCheckAdmin();
 
       if(refreshCalendar && calendar) calendar.refetchEvents();
     }catch(err){
@@ -1533,6 +1737,8 @@
     buildCalendar();
     await loadBootstrap();
     await reloadStaffAndPolicy(false);
+    fillTodayCheck();
+    loadDailyCheckAdmin();
   })();
 </script>
 </body>
