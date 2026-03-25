@@ -944,64 +944,118 @@
     el.innerHTML = (STAFF||[]).map(s=>`<option value="${s.StaffID}">${s.FullName}</option>`).join("");
   }
 
+  function formatThaiDate(ymd){
+    if(!ymd) return "-";
+    const d = new Date(ymd + "T00:00:00");
+    return d.toLocaleDateString("th-TH", {
+      year: "numeric",
+      month: "short",
+      day: "numeric"
+    });
+  }
+
+  function typeBadge(typeKey, typeLabel){
+    const colorMap = {
+      TRAVEL: "var(--c-travel)",
+      SICK: "var(--c-sick)",
+      PERSONAL: "var(--c-personal)",
+      VACATION: "var(--c-vac)"
+    };
+    const c = colorMap[typeKey] || "#64748b";
+    return `
+      <span class="badge" style="border-color:${c}33;background:${c}12;color:${c}">
+        ${escapeHtml(typeLabel || typeKey || "-")}
+      </span>
+    `;
+  }
+
   function renderStatsAllPeriods(data){
-    const staffName = (data.staff && data.staff.FullName) ? data.staff.FullName : "";
+    const staff = data.staff || {};
     const vac = data.vacation || {};
     const periods = data.periods || {};
     const months = Array.isArray(data.months) ? data.months : [];
 
-    function block(label, d, remainValue){
-      const c = (d && d.counts) ? d.counts : {};
-      const r = (d && d.range) ? d.range : {};
+    function n(v){ return Number(v || 0); }
+
+    function block(title, stat, remainVacation){
+      const c = (stat && stat.counts) ? stat.counts : {};
+      const r = (stat && stat.range) ? stat.range : {};
       return `
         <div class="statCard" style="margin-top:12px">
-          <b><i class="fa-solid fa-calendar-days"></i> ${label}</b>
+          <b><i class="fa-solid fa-calendar-week"></i> ${title}</b>
           <div class="smallmuted">
-            ${escapeHtml(r.start || "-")} ถึง ${escapeHtml(r.end || "-")}
-            • วันทำการ ${r.workdays ?? 0} วัน
+            ช่วงวันที่ ${escapeHtml(r.start || "-")} ถึง ${escapeHtml(r.end || "-")}
+            • วันทำการ ${n(r.workdays)} วัน
           </div>
 
           <div class="statGrid" style="margin-top:10px">
-            <div class="statCard">
-              <b><span class="dot" style="background:var(--c-travel)"></span> ไปราชการ</b>
-              <div class="big">${c.TRAVEL ?? 0}</div>
-            </div>
-            <div class="statCard">
-              <b><span class="dot" style="background:var(--c-sick)"></span> ลาป่วย</b>
-              <div class="big">${c.SICK ?? 0}</div>
-            </div>
-            <div class="statCard">
-              <b><span class="dot" style="background:var(--c-personal)"></span> ลากิจ</b>
-              <div class="big">${c.PERSONAL ?? 0}</div>
-            </div>
-            <div class="statCard">
-              <b><span class="dot" style="background:var(--c-vac)"></span> ลาพักผ่อน</b>
-              <div class="big">${c.VACATION ?? 0}</div>
-            </div>
-            <div class="statCard" style="grid-column:1 / -1">
-              <b><i class="fa-solid fa-hourglass-half"></i> วันลาพักผ่อนคงเหลือ</b>
-              <div class="big">${remainValue ?? 0}</div>
-            </div>
+            <div class="statCard"><b>ไปราชการ</b><div class="big">${n(c.TRAVEL)}</div></div>
+            <div class="statCard"><b>ลาป่วย</b><div class="big">${n(c.SICK)}</div></div>
+            <div class="statCard"><b>ลากิจ</b><div class="big">${n(c.PERSONAL)}</div></div>
+            <div class="statCard"><b>ลาพักผ่อน</b><div class="big">${n(c.VACATION)}</div></div>
+            <div class="statCard"><b>ลาพักผ่อนคงเหลือ</b><div class="big">${n(remainVacation)}</div></div>
           </div>
         </div>
       `;
     }
 
-    const monthRows = months.map(m => {
-      const c = m.counts || {};
-      return `
+    const monthRows = months.map(m => `
+      <tr>
+        <td><b>${escapeHtml(m.label || "-")}</b></td>
+        <td>${n(m.counts && m.counts.TRAVEL)}</td>
+        <td>${n(m.counts && m.counts.SICK)}</td>
+        <td>${n(m.counts && m.counts.PERSONAL)}</td>
+        <td>${n(m.counts && m.counts.VACATION)}</td>
+      </tr>
+    `).join("");
+
+    const monthDetailBlocks = months.map(m => {
+      const details = Array.isArray(m.details) ? m.details : [];
+
+      const rows = details.map((d, idx) => `
         <tr>
-          <td><b>${escapeHtml(m.label)}</b></td>
-          <td>${c.TRAVEL ?? 0}</td>
-          <td>${c.SICK ?? 0}</td>
-          <td>${c.PERSONAL ?? 0}</td>
-          <td>${c.VACATION ?? 0}</td>
+          <td>${idx + 1}</td>
+          <td>${typeBadge(d.typeKey, d.typeLabel)}</td>
+          <td>${formatThaiDate(d.startDate)}</td>
+          <td>${formatThaiDate(d.endDate)}</td>
+          <td>${escapeHtml((d.dates || []).join(", "))}</td>
+          <td><b>${n(d.days)}</b></td>
         </tr>
+      `).join("");
+
+      return `
+        <div class="statCard" style="margin-top:12px">
+          <b><i class="fa-solid fa-calendar-days"></i> รายละเอียดการลา / ไปราชการ ประจำ${escapeHtml(m.label || "-")}</b>
+          <div class="smallmuted">
+            แสดงวันที่ที่นับจริงเฉพาะวันทำการของเดือนนั้น
+          </div>
+          <div style="margin-top:10px;overflow:auto;border:1px solid rgba(226,232,240,.9);border-radius:16px">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width:60px">ลำดับ</th>
+                  <th style="width:140px">ประเภท</th>
+                  <th style="width:130px">เริ่ม</th>
+                  <th style="width:130px">สิ้นสุด</th>
+                  <th>วันที่ลา/ไปราชการ</th>
+                  <th style="width:100px">รวม (วัน)</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${rows || `<tr><td colspan="6" style="color:#64748b">ไม่มีรายการในเดือนนี้</td></tr>`}
+              </tbody>
+            </table>
+          </div>
+        </div>
       `;
     }).join("");
 
     $("stResult").innerHTML = `
-      <div class="hint"><b>${escapeHtml(staffName)}</b></div>
+      <div class="statCard">
+        <b><i class="fa-solid fa-user"></i> บุคลากร</b>
+        <div class="big" style="font-size:22px">${escapeHtml(staff.FullName || "-")}</div>
+        <div class="smallmuted">รหัส: ${escapeHtml(staff.StaffID || "-")}</div>
+      </div>
 
       <div class="statGrid" style="margin-top:10px">
         <div class="statCard">
@@ -1059,6 +1113,8 @@
           </table>
         </div>
       </div>
+
+      ${monthDetailBlocks}
     `;
   }
 
