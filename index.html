@@ -261,21 +261,6 @@
       animation: sp 0.9s linear infinite;
     }
     @keyframes sp { to { transform: rotate(360deg); } }
-
-
-    @media print{
-      header, .tabs, .card-h .hint, #loading, #secCal, #secAdmin, #debugOut, .debug-box, #stMsg, #btnReload, #btnRefresh, .no-print{display:none !important;}
-      body{background:#fff !important;}
-      .wrap{max-width:none;padding:0;}
-      .section{display:block !important;}
-      .card,.statCard{box-shadow:none !important;border:1px solid #d1d5db !important;background:#fff !important;}
-      .card{overflow:visible !important;}
-      table{width:100% !important;}
-      th,td{font-size:12px !important;padding:6px 8px !important;}
-      .big{font-size:20px !important;}
-      .badge{background:#fff !important;}
-    }
-
   </style>
 </head>
 
@@ -644,6 +629,7 @@
   let CURRENT_EVENT = null;
   let STAFF = [];
   let POLICY = {};
+  let LAST_STATS_DATA = null;
 
   function setLoading(on, text){
     const el = $("loading");
@@ -984,59 +970,8 @@
     `;
   }
 
-  function printReport(){
-    const target = document.getElementById("stResult");
-    if(!target || !target.innerHTML.trim()){
-      showWarn("ยังไม่มีข้อมูลสำหรับพิมพ์");
-      return;
-    }
-
-    const staffName = document.getElementById("stStaff") && document.getElementById("stStaff").selectedOptions.length
-      ? document.getElementById("stStaff").selectedOptions[0].textContent.trim()
-      : "-";
-
-    const win = window.open("", "printStatsWindow", "width=1100,height=900");
-    if(!win){
-      showWarn("เบราว์เซอร์บล็อกหน้าต่างพิมพ์ กรุณาอนุญาต pop-up ก่อน");
-      return;
-    }
-
-    win.document.write(`<!doctype html>
-<html lang="th">
-<head>
-  <meta charset="utf-8" />
-  <title>รายงานสถิติวันลาและการปฏิบัติงาน</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;700&display=swap" rel="stylesheet">
-  <style>
-    body{font-family:"Kanit",sans-serif;margin:0;padding:24px;color:#0f172a;background:#fff;}
-    .report-head{margin-bottom:16px;border-bottom:2px solid #2563eb;padding-bottom:12px;}
-    .report-head h1{margin:0 0 6px 0;font-size:24px;}
-    .report-head .sub{color:#475569;font-size:14px;line-height:1.6;}
-    .statCard,.card{border:1px solid #cbd5e1;border-radius:14px;padding:12px;background:#fff;box-shadow:none;margin-bottom:12px;overflow:visible;}
-    .statGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;}
-    .big{font-size:24px;font-weight:700;margin-top:4px;}
-    .smallmuted{font-size:12px;color:#64748b;margin-top:4px;line-height:1.5;}
-    .badge{display:inline-flex;align-items:center;border:1px solid #cbd5e1;border-radius:999px;padding:4px 8px;font-size:12px;font-weight:700;background:#fff;color:#334155;}
-    table{width:100%;border-collapse:collapse;}
-    th,td{border:1px solid #cbd5e1;padding:7px 8px;text-align:left;font-size:12px;vertical-align:top;}
-    th{background:#eff6ff;}
-    @media print{body{padding:12px;} .no-print{display:none !important;}}
-  </style>
-</head>
-<body>
-  <div class="report-head">
-    <h1>รายงานสถิติวันลาและการปฏิบัติงาน</h1>
-    <div class="sub">บุคลากร: ${escapeHtml(staffName)}<br>พิมพ์เมื่อ: ${new Date().toLocaleString("th-TH")}</div>
-  </div>
-  ${target.innerHTML}
-  <script>window.onload = function(){ window.print(); };<\/script>
-</body>
-</html>`);
-    win.document.close();
-  }
-
   function renderStatsAllPeriods(data){
+    LAST_STATS_DATA = data;
     const staff = data.staff || {};
     const vac = data.vacation || {};
     const periods = data.periods || {};
@@ -1078,6 +1013,7 @@
 
     const monthDetailBlocks = months.map(m => {
       const details = Array.isArray(m.details) ? m.details : [];
+      const totalDays = details.reduce((sum, d) => sum + n(d.days), 0);
 
       const rows = details.map((d, idx) => `
         <tr>
@@ -1092,9 +1028,12 @@
 
       return `
         <div class="statCard" style="margin-top:12px">
-          <b><i class="fa-solid fa-calendar-days"></i> รายละเอียดการลา / ไปราชการ ประจำ${escapeHtml(m.label || "-")}</b>
-          <div class="smallmuted">
-            แสดงวันที่ที่นับจริงเฉพาะวันทำการของเดือนนั้น
+          <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap">
+            <div>
+              <b><i class="fa-solid fa-calendar-days"></i> รายละเอียดการลา / ไปราชการ ประจำ${escapeHtml(m.label || "-")}</b>
+              <div class="smallmuted">แสดงวันที่ที่นับจริงเฉพาะวันทำการของเดือนนั้น</div>
+            </div>
+            <div class="badge"><i class="fa-solid fa-list-check"></i> ${details.length} รายการ • รวม ${totalDays} วัน</div>
           </div>
           <div style="margin-top:10px;overflow:auto;border:1px solid rgba(226,232,240,.9);border-radius:16px">
             <table>
@@ -1119,7 +1058,7 @@
 
     $("stResult").innerHTML = `
       <div class="right no-print" style="margin-bottom:10px">
-        <button class="btn primary" onclick="printReport()"><i class="fa-solid fa-print"></i> พิมพ์รายงาน</button>
+        <button class="btn good" onclick="printExecutiveReport()"><i class="fa-solid fa-print"></i> พิมพ์รายงานผู้บริหาร</button>
       </div>
 
       <div class="statCard">
@@ -1133,27 +1072,22 @@
           <b><i class="fa-solid fa-layer-group"></i> วันลาพักผ่อนสะสม</b>
           <div class="big">${vac.CarryPrev ?? 0}</div>
         </div>
-
         <div class="statCard">
           <b><i class="fa-solid fa-calendar-plus"></i> วันลาพักผ่อนประจำปี</b>
           <div class="big">${vac.GrantedThisFY ?? 0}</div>
         </div>
-
         <div class="statCard">
           <b><i class="fa-solid fa-shield-halved"></i> วันพักผ่อนที่ลาได้สูงสุด</b>
           <div class="big">${vac.AccumulateCap ?? 0}</div>
         </div>
-
         <div class="statCard">
           <b><i class="fa-solid fa-calculator"></i> วันลาพักผ่อนที่ลาได้ในปีงบประมาณนี้</b>
           <div class="big">${vac.AllowedThisFY ?? 0}</div>
         </div>
-
         <div class="statCard">
           <b><i class="fa-solid fa-plane-departure"></i> ใช้ลาพักผ่อนแล้วทั้งปีงบประมาณ</b>
           <div class="big">${vac.UsedFY ?? 0}</div>
         </div>
-
         <div class="statCard">
           <b><i class="fa-solid fa-hourglass-half"></i> วันลาพักผ่อนคงเหลือทั้งปีงบประมาณ</b>
           <div class="big">${vac.RemainFY ?? 0}</div>
@@ -1187,6 +1121,210 @@
 
       ${monthDetailBlocks}
     `;
+  }
+
+  function reportCss_(){
+    return `
+      @page{size:A4 portrait; margin:1.2cm;}
+      *{box-sizing:border-box}
+      body{font-family:"TH Sarabun New","Sarabun","Kanit",Arial,sans-serif;color:#0f172a;margin:0;font-size:14px;line-height:1.45}
+      .page{min-height:27.7cm; page-break-after:always; position:relative}
+      .page:last-child{page-break-after:auto}
+      .report-shell{padding:0}
+      .head{border-bottom:3px solid #1d4ed8;padding-bottom:10px;margin-bottom:14px}
+      .head h1{font-size:24px;margin:0 0 4px;text-align:center}
+      .head h2{font-size:18px;margin:0;text-align:center;font-weight:700}
+      .subhead{margin-top:6px;text-align:center;color:#334155;font-size:13px}
+      .info-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:10px;margin-bottom:12px}
+      .card{border:1px solid #cbd5e1;border-radius:10px;padding:10px 12px;background:#fff}
+      .muted{color:#475569;font-size:12px}
+      .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0 12px}
+      .kpi{border:1px solid #dbeafe;background:#f8fbff;border-radius:10px;padding:10px;text-align:center}
+      .kpi .n{font-size:22px;font-weight:700;margin-top:4px}
+      .section-title{font-size:16px;font-weight:700;margin:12px 0 8px;padding-left:8px;border-left:4px solid #1d4ed8}
+      .period-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+      .period{border:1px solid #cbd5e1;border-radius:10px;padding:10px;background:#fff}
+      .period .label{font-weight:700;margin-bottom:4px}
+      .period .range{font-size:12px;color:#475569;margin-bottom:8px}
+      .mini{display:grid;grid-template-columns:repeat(2,1fr);gap:6px}
+      .mini div{border:1px dashed #cbd5e1;border-radius:8px;padding:6px 8px;background:#f8fafc}
+      table{width:100%;border-collapse:collapse;margin-top:6px}
+      th,td{border:1px solid #cbd5e1;padding:6px 8px;vertical-align:top}
+      th{background:#eff6ff;font-weight:700;text-align:center}
+      td.num{text-align:center}
+      .footer-sign{margin-top:18px;display:flex;justify-content:flex-end}
+      .sign-box{text-align:center;min-width:280px}
+      .month-block{page-break-inside:avoid;margin-bottom:12px}
+      .month-head{display:flex;justify-content:space-between;align-items:flex-end;gap:10px;margin-bottom:6px}
+      .month-head .title{font-size:17px;font-weight:700}
+      .pill{font-size:12px;border:1px solid #cbd5e1;border-radius:999px;padding:3px 10px;background:#f8fafc}
+      .empty{padding:16px;text-align:center;color:#64748b;border:1px dashed #cbd5e1;border-radius:10px}
+    `;
+  }
+
+  function buildExecutiveReportHtml(data){
+    const staff = data.staff || {};
+    const vac = data.vacation || {};
+    const periods = data.periods || {};
+    const months = Array.isArray(data.months) ? data.months : [];
+    const n = (v)=>Number(v || 0);
+    const nowTh = new Date().toLocaleString("th-TH", { dateStyle:"full", timeStyle:"short" });
+
+    const periodCard = (title, stat, remain)=>{
+      const c = (stat && stat.counts) ? stat.counts : {};
+      const r = (stat && stat.range) ? stat.range : {};
+      return `
+        <div class="period">
+          <div class="label">${escapeHtml(title)}</div>
+          <div class="range">${escapeHtml(r.start || "-")} ถึง ${escapeHtml(r.end || "-")} • วันทำการ ${n(r.workdays)} วัน</div>
+          <div class="mini">
+            <div>ไปราชการ <b>${n(c.TRAVEL)}</b></div>
+            <div>ลาป่วย <b>${n(c.SICK)}</b></div>
+            <div>ลากิจ <b>${n(c.PERSONAL)}</b></div>
+            <div>ลาพักผ่อน <b>${n(c.VACATION)}</b></div>
+            <div style="grid-column:1 / span 2">คงเหลือลาพักผ่อน <b>${n(remain)}</b></div>
+          </div>
+        </div>
+      `;
+    };
+
+    const monthSummaryRows = months.map(m => `
+      <tr>
+        <td>${escapeHtml(m.label || "-")}</td>
+        <td class="num">${n(m.counts && m.counts.TRAVEL)}</td>
+        <td class="num">${n(m.counts && m.counts.SICK)}</td>
+        <td class="num">${n(m.counts && m.counts.PERSONAL)}</td>
+        <td class="num">${n(m.counts && m.counts.VACATION)}</td>
+      </tr>
+    `).join("");
+
+    const detailPages = months.map((m, pageIdx) => {
+      const details = Array.isArray(m.details) ? m.details : [];
+      const rows = details.map((d, idx) => `
+        <tr>
+          <td class="num">${idx + 1}</td>
+          <td>${escapeHtml(d.typeLabel || d.typeKey || "-")}</td>
+          <td class="num">${formatThaiDate(d.startDate)}</td>
+          <td class="num">${formatThaiDate(d.endDate)}</td>
+          <td>${escapeHtml((d.dates || []).join(", "))}</td>
+          <td class="num">${n(d.days)}</td>
+        </tr>
+      `).join("");
+      const totalDays = details.reduce((sum, d) => sum + n(d.days), 0);
+      return `
+        <section class="page report-shell">
+          <div class="head">
+            <h1>รายงานรายละเอียดรายเดือน</h1>
+            <h2>${escapeHtml(m.label || "-")}</h2>
+            <div class="subhead">บุคลากร: ${escapeHtml(staff.FullName || "-")} (${escapeHtml(staff.StaffID || "-")})</div>
+          </div>
+          <div class="month-block">
+            <div class="month-head">
+              <div class="title">สรุปรายการลาและการปฏิบัติงานประจำเดือน</div>
+              <div class="pill">${details.length} รายการ • รวม ${totalDays} วัน</div>
+            </div>
+            ${details.length ? `
+              <table>
+                <thead>
+                  <tr>
+                    <th style="width:46px">ลำดับ</th>
+                    <th style="width:120px">ประเภท</th>
+                    <th style="width:90px">เริ่ม</th>
+                    <th style="width:90px">สิ้นสุด</th>
+                    <th>วันที่ที่นับจริง</th>
+                    <th style="width:70px">รวม</th>
+                  </tr>
+                </thead>
+                <tbody>${rows}</tbody>
+              </table>
+            ` : `<div class="empty">ไม่มีรายการในเดือนนี้</div>`}
+          </div>
+        </section>
+      `;
+    }).join("");
+
+    return `
+      <!doctype html>
+      <html lang="th">
+      <head>
+        <meta charset="utf-8">
+        <title>รายงานสรุปสถิติการลาและการปฏิบัติงาน</title>
+        <style>${reportCss_()}</style>
+      </head>
+      <body>
+        <section class="page report-shell">
+          <div class="head">
+            <h1>รายงานสรุปสถิติการลาและการปฏิบัติงาน</h1>
+            <h2>มหาวิทยาลัยราชภัฏพระนครศรีอยุธยา</h2>
+            <div class="subhead">สำหรับเสนอผู้บริหาร • พิมพ์เมื่อ ${escapeHtml(nowTh)}</div>
+          </div>
+
+          <div class="info-grid">
+            <div class="card">
+              <div><b>ชื่อ-สกุล:</b> ${escapeHtml(staff.FullName || "-")}</div>
+              <div><b>รหัสบุคลากร:</b> ${escapeHtml(staff.StaffID || "-")}</div>
+              <div class="muted">รายงานฉบับนี้สรุปข้อมูลตามปีงบประมาณ รอบการประเมิน และสถิติรายเดือนในช่วงปีงบประมาณปัจจุบัน</div>
+            </div>
+            <div class="card">
+              <div><b>ปีงบประมาณ:</b> 1 ตุลาคม 2568 - 30 กันยายน 2569</div>
+              <div><b>รอบการประเมิน:</b> รอบที่ 1 / รอบที่ 2</div>
+              <div><b>สถานะข้อมูล:</b> จากระบบปฏิทินและนโยบายการลา</div>
+            </div>
+          </div>
+
+          <div class="kpis">
+            <div class="kpi"><div>ลาพักผ่อนสะสม</div><div class="n">${n(vac.CarryPrev)}</div></div>
+            <div class="kpi"><div>สิทธิ์ลาพักผ่อนปีนี้</div><div class="n">${n(vac.AllowedThisFY)}</div></div>
+            <div class="kpi"><div>คงเหลือปีงบประมาณ</div><div class="n">${n(vac.RemainFY)}</div></div>
+          </div>
+
+          <div class="section-title">สรุปตามรอบการประเมินและปีงบประมาณ</div>
+          <div class="period-grid">
+            ${periodCard("รอบที่ 1", periods.P1, vac.RemainP1)}
+            ${periodCard("รอบที่ 2", periods.P2, vac.RemainP2)}
+            ${periodCard("ปีงบประมาณ", periods.FY, vac.RemainFY)}
+          </div>
+
+          <div class="section-title">สรุปรายเดือน</div>
+          <table>
+            <thead>
+              <tr>
+                <th>เดือน</th>
+                <th>ไปราชการ</th>
+                <th>ลาป่วย</th>
+                <th>ลากิจ</th>
+                <th>ลาพักผ่อน</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${monthSummaryRows || '<tr><td colspan="5" class="num">ไม่มีข้อมูล</td></tr>'}
+            </tbody>
+          </table>
+
+          <div class="footer-sign">
+            <div class="sign-box">
+              <div style="margin-top:34px">ลงชื่อ ............................................................</div>
+              <div style="margin-top:8px">(............................................................)</div>
+              <div style="margin-top:8px">ตำแหน่ง .......................................................</div>
+            </div>
+          </div>
+        </section>
+        ${detailPages}
+      </body>
+      </html>
+    `;
+  }
+
+  function printExecutiveReport(){
+    if(!LAST_STATS_DATA){
+      showWarn("กรุณาคำนวณสถิติก่อนพิมพ์รายงาน");
+      return;
+    }
+    const win = window.open("", "_blank", "width=1024,height=900");
+    win.document.open();
+    win.document.write(buildExecutiveReportHtml(LAST_STATS_DATA));
+    win.document.close();
+    setTimeout(()=>{ win.focus(); win.print(); }, 350);
   }
 
   async function calcStatsAll(){
