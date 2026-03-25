@@ -261,6 +261,21 @@
       animation: sp 0.9s linear infinite;
     }
     @keyframes sp { to { transform: rotate(360deg); } }
+
+
+    @media print{
+      header, .tabs, .card-h .hint, #loading, #secCal, #secAdmin, #debugOut, .debug-box, #stMsg, #btnReload, #btnRefresh, .no-print{display:none !important;}
+      body{background:#fff !important;}
+      .wrap{max-width:none;padding:0;}
+      .section{display:block !important;}
+      .card,.statCard{box-shadow:none !important;border:1px solid #d1d5db !important;background:#fff !important;}
+      .card{overflow:visible !important;}
+      table{width:100% !important;}
+      th,td{font-size:12px !important;padding:6px 8px !important;}
+      .big{font-size:20px !important;}
+      .badge{background:#fff !important;}
+    }
+
   </style>
 </head>
 
@@ -969,6 +984,58 @@
     `;
   }
 
+  function printReport(){
+    const target = document.getElementById("stResult");
+    if(!target || !target.innerHTML.trim()){
+      showWarn("ยังไม่มีข้อมูลสำหรับพิมพ์");
+      return;
+    }
+
+    const staffName = document.getElementById("stStaff") && document.getElementById("stStaff").selectedOptions.length
+      ? document.getElementById("stStaff").selectedOptions[0].textContent.trim()
+      : "-";
+
+    const win = window.open("", "printStatsWindow", "width=1100,height=900");
+    if(!win){
+      showWarn("เบราว์เซอร์บล็อกหน้าต่างพิมพ์ กรุณาอนุญาต pop-up ก่อน");
+      return;
+    }
+
+    win.document.write(`<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <title>รายงานสถิติวันลาและการปฏิบัติงาน</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    body{font-family:"Kanit",sans-serif;margin:0;padding:24px;color:#0f172a;background:#fff;}
+    .report-head{margin-bottom:16px;border-bottom:2px solid #2563eb;padding-bottom:12px;}
+    .report-head h1{margin:0 0 6px 0;font-size:24px;}
+    .report-head .sub{color:#475569;font-size:14px;line-height:1.6;}
+    .statCard,.card{border:1px solid #cbd5e1;border-radius:14px;padding:12px;background:#fff;box-shadow:none;margin-bottom:12px;overflow:visible;}
+    .statGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;}
+    .big{font-size:24px;font-weight:700;margin-top:4px;}
+    .smallmuted{font-size:12px;color:#64748b;margin-top:4px;line-height:1.5;}
+    .badge{display:inline-flex;align-items:center;border:1px solid #cbd5e1;border-radius:999px;padding:4px 8px;font-size:12px;font-weight:700;background:#fff;color:#334155;}
+    table{width:100%;border-collapse:collapse;}
+    th,td{border:1px solid #cbd5e1;padding:7px 8px;text-align:left;font-size:12px;vertical-align:top;}
+    th{background:#eff6ff;}
+    @media print{body{padding:12px;} .no-print{display:none !important;}}
+  </style>
+</head>
+<body>
+  <div class="report-head">
+    <h1>รายงานสถิติวันลาและการปฏิบัติงาน</h1>
+    <div class="sub">บุคลากร: ${escapeHtml(staffName)}<br>พิมพ์เมื่อ: ${new Date().toLocaleString("th-TH")}</div>
+  </div>
+  ${target.innerHTML}
+  <script>window.onload = function(){ window.print(); };<\/script>
+</body>
+</html>`);
+    win.document.close();
+  }
+
   function renderStatsAllPeriods(data){
     const staff = data.staff || {};
     const vac = data.vacation || {};
@@ -1051,6 +1118,10 @@
     }).join("");
 
     $("stResult").innerHTML = `
+      <div class="right no-print" style="margin-bottom:10px">
+        <button class="btn primary" onclick="printReport()"><i class="fa-solid fa-print"></i> พิมพ์รายงาน</button>
+      </div>
+
       <div class="statCard">
         <b><i class="fa-solid fa-user"></i> บุคลากร</b>
         <div class="big" style="font-size:22px">${escapeHtml(staff.FullName || "-")}</div>
