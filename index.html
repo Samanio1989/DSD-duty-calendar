@@ -269,7 +269,7 @@
   <div class="wrap">
     <div class="top">
       <div class="brand">
-        <div class="logo" style="background:#fff;padding:2px"><img src="https://drive.google.com/uc?export=view&id=1Uw3Exsov9d_TX62i6EmAA8_tbDkOmUtr" alt="ARU" style="width:100%;height:100%;object-fit:contain;border-radius:14px"></div>
+        <div class="logo" style="background:#fff;padding:2px"><img src="https://drive.google.com/thumbnail?id=1Uw3Exsov9d_TX62i6EmAA8_tbDkOmUtr&sz=w1000" alt="ARU" style="width:100%;height:100%;object-fit:contain;border-radius:14px" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='https://drive.google.com/uc?export=view&id=1Uw3Exsov9d_TX62i6EmAA8_tbDkOmUtr';"></div>
         <div>
           <h1>ระบบสรุปการลา การปฏิบัติงาน และเช็คชื่อบุคลากร</h1>
           <div class="sub">
@@ -694,7 +694,7 @@
   let STAFF = [];
   let POLICY = {};
   let LAST_STATS_DATA = null;
-  const UNIVERSITY_LOGO = 'https://drive.google.com/thumbnail?id=1Uw3Exsov9d_TX62i6EmAA8_tbDkOmUtr&sz=w1000';
+  const REPORT_LOGO = "https://drive.google.com/thumbnail?id=1Uw3Exsov9d_TX62i6EmAA8_tbDkOmUtr&sz=w1000";
 
   function setLoading(on, text){
     const el = $("loading");
@@ -1378,7 +1378,7 @@
     const detailPages = `
       <section class="page report-shell">
         <div class="head">
-          <div class="logoRow"><img src="${REPORT_LOGO}" alt="ARU"></div>
+          <div class="logoRow"><img src="${REPORT_LOGO}" alt="ARU" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='https://drive.google.com/uc?export=view&id=1Uw3Exsov9d_TX62i6EmAA8_tbDkOmUtr';"></div>
           <h1>รายละเอียดรายเดือน</h1>
           <h2>เรียงต่อเนื่องตลอดปีงบประมาณ</h2>
           <div class="subhead">บุคลากร: ${escapeHtml(staff.FullName || "-")} (${escapeHtml(staff.StaffID || "-")})</div>
@@ -1433,7 +1433,7 @@
       <body>
         <section class="page report-shell">
           <div class="head">
-            <div class="logoRow"><img src="${REPORT_LOGO}" alt="ARU"></div>
+            <div class="logoRow"><img src="${REPORT_LOGO}" alt="ARU" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='https://drive.google.com/uc?export=view&id=1Uw3Exsov9d_TX62i6EmAA8_tbDkOmUtr';"></div>
             <h1>รายงานสรุปสถิติการลาและการปฏิบัติงาน</h1>
             <h2>มหาวิทยาลัยราชภัฏพระนครศรีอยุธยา</h2>
             <div class="subhead">สำหรับเสนอผู้บริหาร • พิมพ์เมื่อ ${escapeHtml(nowTh)}</div>
